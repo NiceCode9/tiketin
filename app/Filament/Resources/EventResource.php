@@ -46,6 +46,25 @@ class EventResource extends Resource
                             ->visible(fn () => auth()->user()->hasRole('super_admin'))
                             ->default(fn () => auth()->user()->client_id),
                         
+                        Forms\Components\Select::make('event_category_id')
+                            ->label('Category')
+                            ->relationship('eventCategory', 'name')
+                            ->required()
+                            ->preload()
+                            ->searchable()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')
+                                    ->required()
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(fn (string $operation, $state, Forms\Set $set) => 
+                                        $operation === 'create' ? $set('slug', Str::slug($state)) : null),
+                                Forms\Components\TextInput::make('slug')
+                                    ->disabled()
+                                    ->dehydrated()
+                                    ->required()
+                                    ->unique('event_categories', 'slug'),
+                            ]),
+
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->maxLength(255)
@@ -175,6 +194,10 @@ class EventResource extends Resource
                                 TextEntry::make('venue.name')
                                     ->label('Venue')
                                     ->icon('heroicon-m-map-pin'),
+
+                                TextEntry::make('eventCategory.name')
+                                    ->label('Category')
+                                    ->icon('heroicon-m-tag'),
                                 
                                 TextEntry::make('client.name')
                                     ->label('Client')
@@ -247,6 +270,11 @@ class EventResource extends Resource
                     ->searchable()
                     ->sortable(),
                 
+                Tables\Columns\TextColumn::make('eventCategory.name')
+                    ->label('Category')
+                    ->searchable()
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('venue.name')
                     ->searchable()
                     ->sortable()
@@ -292,6 +320,9 @@ class EventResource extends Resource
                 Tables\Filters\SelectFilter::make('client')
                     ->relationship('client', 'name')
                     ->visible(fn () => auth()->user()->hasRole('super_admin')),
+                
+                Tables\Filters\SelectFilter::make('eventCategory')
+                    ->relationship('eventCategory', 'name'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

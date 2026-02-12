@@ -16,18 +16,19 @@ class Event extends Model
 
     protected $fillable = [
         'client_id',
+        'event_category_id',
         'venue_id',
         'name',
         'slug',
         'description',
+        'banner_image',
+        'additional_images',
         'event_date',
         'event_end_date',
         'status',
         'has_assigned_seating',
         'wristband_exchange_start',
         'wristband_exchange_end',
-        'banner_image',
-        'additional_images',
     ];
 
     protected $casts = [
@@ -76,6 +77,14 @@ class Event extends Model
     public function ticketCategories(): HasMany
     {
         return $this->hasMany(TicketCategory::class);
+    }
+
+    /**
+     * Get the category that the event belongs to.
+     */
+    public function eventCategory(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(EventCategory::class, 'event_category_id');
     }
 
     /**

@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         // 1. Setup Roles & Permissions
         $this->call([
             RolesAndPermissionsSeeder::class,
+            EventCategorySeeder::class,
         ]);
 
         // 2. Create Super Admin
