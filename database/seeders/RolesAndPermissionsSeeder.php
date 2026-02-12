@@ -22,7 +22,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_events', 'create_events', 'update_events', 'delete_events',
             'view_tickets', 'create_tickets', 'update_tickets', 'delete_tickets',
             'view_orders', 'update_orders',
-            'scan_tickets', 'validate_wristbands'
+            'scan_tickets', 'validate_wristbands',
+            // Weird naming convention from Policies
+            'view_any_ticket::category', 'view_ticket::category', 'create_ticket::category', 'update_ticket::category', 'delete_ticket::category',
+            'view_any_promo::code', 'view_promo::code', 'create_promo::code', 'update_promo::code', 'delete_promo::code'
         ];
 
         foreach ($permissions as $permission) {
@@ -40,8 +43,12 @@ class RolesAndPermissionsSeeder extends Seeder
         $clientAdmin->givePermissionTo([
             'view_events', 'create_events', 'update_events', 
             'view_tickets', 'update_tickets',
-            'view_orders'
+            'view_orders',
+            'view_any_ticket::category', 'view_ticket::category', 'create_ticket::category', 'update_ticket::category', 'delete_ticket::category',
+            'view_any_promo::code', 'view_promo::code', 'create_promo::code', 'update_promo::code', 'delete_promo::code'
         ]);
+
+        $superAdmin->givePermissionTo(Permission::all()); // Explicitly give all to super admin since Gate::before is disabled
 
         // Wristband Exchange Officer
         $exchangeOfficer = Role::firstOrCreate(['name' => 'wristband_exchange_officer', 'guard_name' => 'web']);

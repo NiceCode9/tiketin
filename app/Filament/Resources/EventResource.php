@@ -13,6 +13,13 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\Split;
+use Filament\Infolists\Components\Group;
 
 class EventResource extends Resource
 {
@@ -128,6 +135,104 @@ class EventResource extends Resource
             ]);
     }
 
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make()
+                    ->schema([
+                        Split::make([
+                            Grid::make(1)
+                                ->schema([
+                                    ImageEntry::make('banner_image')
+                                        ->hiddenLabel()
+                                        ->grow(false)
+                                        ->width('100%')
+                                        ->height('auto')
+                                        ->extraImgAttributes([
+                                            'class' => 'object-cover w-full rounded-lg shadow-md',
+                                            'style' => 'max-height: 400px;',
+                                        ]),
+                                ]),
+                            Group::make([
+                                TextEntry::make('name')
+                                    ->weight('bold')
+                                    ->size('3xl')
+                                    ->columnSpanFull(),
+                                
+                                TextEntry::make('status')
+                                    ->badge()
+                                    ->color(fn (string $state): string => match ($state) {
+                                        'draft' => 'gray',
+                                        'published' => 'success',
+                                        'closed' => 'danger',
+                                    }),
+
+                                TextEntry::make('event_date')
+                                    ->dateTime('l, d F Y, H:i')
+                                    ->icon('heroicon-m-calendar'),
+                                
+                                TextEntry::make('venue.name')
+                                    ->label('Venue')
+                                    ->icon('heroicon-m-map-pin'),
+                                
+                                TextEntry::make('client.name')
+                                    ->label('Client')
+                                    ->visible(fn () => auth()->user()->hasRole('super_admin'))
+                                    ->icon('heroicon-m-building-office'),
+                            ])
+                            ->grow(false),
+                        ])->from('md'),
+                    ]),
+
+                Section::make('Description')
+                    ->schema([
+                        TextEntry::make('description')
+                            ->prose()
+                            ->markdown()
+                            ->hiddenLabel(),
+                    ])
+                    ->collapsible(),
+
+                Section::make('Event Details')
+                    ->schema([
+                        Grid::make(3)
+                            ->schema([
+                                TextEntry::make('has_assigned_seating')
+                                    ->label('Seating System')
+                                    ->badge()
+                                    ->color(fn (bool $state): string => $state ? 'success' : 'gray')
+                                    ->formatStateUsing(fn (bool $state): string => $state ? 'Assigned Seating' : 'Free Standing'),
+                                
+                                TextEntry::make('wristband_exchange_start')
+                                    ->label('Exchange Start')
+                                    ->dateTime('d M Y, H:i')
+                                    ->placeholder('Not set'),
+
+                                TextEntry::make('wristband_exchange_end')
+                                    ->label('Exchange End')
+                                    ->dateTime('d M Y, H:i')
+                                    ->placeholder('Not set'),
+                            ]),
+                    ]),
+                
+                Section::make('Gallery')
+                    ->schema([
+                        ImageEntry::make('additional_images')
+                            ->hiddenLabel()
+                            ->circular(false)
+                            ->stacked()
+                            ->limit(4)
+                            ->width(200)
+                            ->height(200)
+                            ->extraImgAttributes([
+                        'class' => 'object-cover rounded-lg m-2',
+                    ]),
+                    ])
+                    ->visible(fn ($record) => !empty($record->additional_images)),
+            ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -189,6 +294,7 @@ class EventResource extends Resource
                     ->visible(fn () => auth()->user()->hasRole('super_admin')),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -225,6 +331,7 @@ class EventResource extends Resource
         return [
             'index' => Pages\ListEvents::route('/'),
             'create' => Pages\CreateEvent::route('/create'),
+            'view' => Pages\ViewEvent::route('/{record}'),
             'edit' => Pages\EditEvent::route('/{record}/edit'),
         ];
     }
