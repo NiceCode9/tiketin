@@ -37,8 +37,8 @@ class DatabaseSeeder extends Seeder
         foreach ($clients as $index => $client) {
             // Create Client Admin
             $clientAdmin = User::factory()->create([
-                'name' => 'Admin ' . $client->name,
-                'email' => 'admin' . ($index + 1) . '@client.com',
+                'name' => 'Admin '.$client->name,
+                'email' => 'admin'.($index + 1).'@client.com',
                 'password' => bcrypt('password'),
                 'client_id' => $client->id,
             ]);
@@ -79,17 +79,17 @@ class DatabaseSeeder extends Seeder
                 ]);
 
                 // Create some dummy orders for the first event
-                if ($event->id === $events->first()->id) {
-                    Order::factory(5)->create([
-                        'event_id' => $event->id,
-                        'payment_status' => 'paid',
-                    ])->each(function ($order) {
-                         // Ticket creation logic handled in OrderObserver usually, 
-                         // but here we might need to manually create tickets if factories don't assume observers run
-                         // or if OrderFactory doesn't create items.
-                         // Let's assume generic factory usage for now.
-                    });
-                }
+                // if ($event->id === $events->first()->id) {
+                //     Order::factory(5)->create([
+                //         'event_id' => $event->id,
+                //         'payment_status' => 'paid',
+                //     ])->each(function ($order) {
+                //         // Ticket creation logic handled in OrderObserver usually,
+                //         // but here we might need to manually create tickets if factories don't assume observers run
+                //         // or if OrderFactory doesn't create items.
+                //         // Let's assume generic factory usage for now.
+                //     });
+                // }
             }
         }
     }

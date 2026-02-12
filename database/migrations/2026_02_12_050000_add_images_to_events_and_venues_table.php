@@ -18,6 +18,8 @@ return new class extends Migration
 
         Schema::table('venues', function (Blueprint $table) {
             $table->string('image')->nullable()->after('capacity');
+            $table->foreignId('client_id')->nullable()->after('capacity');
+            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
         });
     }
 
@@ -32,6 +34,7 @@ return new class extends Migration
 
         Schema::table('venues', function (Blueprint $table) {
             $table->dropColumn('image');
+            $table->dropColumn('client_id');
         });
     }
 };

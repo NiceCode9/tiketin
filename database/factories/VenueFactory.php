@@ -19,10 +19,10 @@ class VenueFactory extends Factory
     {
         return [
             'client_id' => Client::factory(),
-            'name' => $this->faker->city() . ' Arena',
+            'name' => $this->faker->city().' Arena',
             'address' => $this->faker->address(),
             'capacity' => $this->faker->numberBetween(1000, 50000),
-            'description' => $this->faker->paragraph(),
+            // 'description' => $this->faker->paragraph(),
         ];
     }
 }

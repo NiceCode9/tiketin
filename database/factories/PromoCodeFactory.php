@@ -22,12 +22,13 @@ class PromoCodeFactory extends Factory
             'code' => strtoupper(Str::random(8)),
             'event_id' => Event::factory(),
             'discount_type' => $this->faker->randomElement(['percentage', 'fixed']),
-            'discount_value' => $this->faker->numberBetween(10, 50), // For fixed, this might be small, but ok for dummy
-            'max_uses' => $this->faker->numberBetween(10, 100),
-            'used_count' => 0,
+            'discount_value' => $this->faker->numberBetween(10, 50),
+            'quota' => $this->faker->numberBetween(10, 100),
+            'min_purchase_amount' => $this->faker->numberBetween(10, 100),
+            'max_discount_amount' => $this->faker->numberBetween(10, 100),
             'valid_from' => $this->faker->dateTimeBetween('-1 month', 'now'),
             'valid_until' => $this->faker->dateTimeBetween('now', '+1 month'),
-            'is_active' => true,
+            'status' => 'active',
         ];
     }
 }
