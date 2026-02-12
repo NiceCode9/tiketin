@@ -4,11 +4,9 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Event;
-use App\Models\TicketCategory;
 use App\Models\Seat;
+use App\Models\TicketCategory;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class OrderService
 {
@@ -38,9 +36,9 @@ class OrderService
             // Create order items
             foreach ($data['items'] as $item) {
                 $ticketCategory = TicketCategory::findOrFail($item['ticket_category_id']);
-                
+
                 // Check availability
-                if (!$ticketCategory->hasAvailableTickets($item['quantity'])) {
+                if (! $ticketCategory->hasAvailableTickets($item['quantity'])) {
                     throw new \Exception("Insufficient tickets available for {$ticketCategory->name}");
                 }
 
@@ -48,12 +46,12 @@ class OrderService
                 $seatId = null;
                 if ($ticketCategory->is_seated && isset($item['seat_id'])) {
                     $seat = Seat::findOrFail($item['seat_id']);
-                    
+
                     // Verify seat is available
                     if ($seat->status !== 'available') {
                         throw new \Exception("Seat {$seat->full_seat} is not available");
                     }
-                    
+
                     // Reserve the seat temporarily
                     $seat->update(['status' => 'reserved']);
                     $seatId = $seat->id;
@@ -96,7 +94,7 @@ class OrderService
         if ($promoCode) {
             $promoService = app(PromoService::class);
             $promo = $promoService->validatePromoCode($promoCode, $order->event);
-            
+
             if ($promo && $promo->meetsMinimumPurchase($subtotal)) {
                 $discountAmount = $promo->calculateDiscount($subtotal);
             }
@@ -130,7 +128,7 @@ class OrderService
                         Seat::where('id', $item->seat_id)
                             ->update(['status' => 'available']);
                     }
-                    
+
                     // Decrement sold count
                     $item->ticketCategory->decrement('sold_count', $item->quantity);
                 }
@@ -152,7 +150,7 @@ class OrderService
     {
         DB::transaction(function () use ($order, $paymentData) {
             $order->update([
-                'payment_status' => 'success',
+                'payment_status' => 'paid',
                 'payment_method' => $paymentData['payment_method'] ?? null,
                 'paid_at' => now(),
             ]);

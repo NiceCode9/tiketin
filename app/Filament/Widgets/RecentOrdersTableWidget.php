@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Auth;
 class RecentOrdersTableWidget extends BaseWidget
 {
     protected static ?int $sort = 4;
-    
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Recent Orders';
 
@@ -24,7 +24,7 @@ class RecentOrdersTableWidget extends BaseWidget
                 Order::query()
                     ->latest()
                     ->when(
-                        Auth::user()->hasRole('client_admin'), 
+                        Auth::user()->hasRole('client_admin'),
                         fn ($q) => $q->whereHas('event', fn ($sq) => $sq->where('client_id', Auth::user()->client_id))
                     )
                     ->limit(10)
@@ -47,7 +47,7 @@ class RecentOrdersTableWidget extends BaseWidget
                     ->sortable(),
                 Tables\Columns\BadgeColumn::make('payment_status')
                     ->colors([
-                        'danger' => 'unpaid',
+                        'danger' => ['expired', 'canceled', 'failed'],
                         'warning' => 'pending',
                         'success' => 'paid',
                     ]),

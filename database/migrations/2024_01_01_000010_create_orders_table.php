@@ -24,13 +24,13 @@ return new class extends Migration
             $table->decimal('subtotal', 10, 2);
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->decimal('total_amount', 10, 2);
-            $table->enum('payment_status', ['pending', 'success', 'failed', 'expired'])->default('pending');
+            $table->enum('payment_status', ['pending', 'success', 'failed', 'paid', 'expired', 'canceled'])->default('pending');
             $table->string('payment_method')->nullable();
             $table->timestamp('paid_at')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes for lookups
             $table->index('consumer_identity_number');
             $table->index('order_token');

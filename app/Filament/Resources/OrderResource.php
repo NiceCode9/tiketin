@@ -6,11 +6,11 @@ use App\Filament\Resources\OrderResource\Pages;
 use App\Models\Order;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
 
 class OrderResource extends Resource
 {
@@ -29,12 +29,12 @@ class OrderResource extends Resource
             ->schema([
                 Forms\Components\Placeholder::make('order_number')
                     ->content(fn ($record) => $record->order_number),
-                
+
                 Forms\Components\Placeholder::make('consumer_name')
                     ->content(fn ($record) => $record->consumer_name),
-                
+
                 Forms\Components\Placeholder::make('total_amount')
-                    ->content(fn ($record) => 'Rp ' . number_format($record->total_amount, 0, ',', '.')),
+                    ->content(fn ($record) => 'Rp '.number_format($record->total_amount, 0, ',', '.')),
             ]);
     }
 
@@ -45,39 +45,39 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('order_number')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('event.name')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('consumer_name')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('consumer_email')
                     ->searchable()
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('consumer_identity_number')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 Tables\Columns\TextColumn::make('total_amount')
                     ->money('IDR')
                     ->sortable(),
-                
+
                 Tables\Columns\BadgeColumn::make('payment_status')
                     ->colors([
                         'warning' => 'pending',
-                        'success' => 'success',
+                        'success' => 'paid',
                         'danger' => ['failed', 'expired'],
                     ]),
-                
+
                 Tables\Columns\TextColumn::make('paid_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
@@ -86,11 +86,12 @@ class OrderResource extends Resource
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->options([
                         'pending' => 'Pending',
-                        'success' => 'Success',
+                        'paid' => 'Paid',
                         'failed' => 'Failed',
                         'expired' => 'Expired',
+                        'canceled' => 'Canceled',
                     ]),
-                
+
                 Tables\Filters\SelectFilter::make('event')
                     ->relationship('event', 'name'),
             ])
@@ -115,14 +116,14 @@ class OrderResource extends Resource
                             ->badge()
                             ->color(fn (string $state): string => match ($state) {
                                 'pending' => 'warning',
-                                'success' => 'success',
+                                'paid' => 'success',
                                 'failed', 'expired' => 'danger',
                             }),
                         Infolists\Components\TextEntry::make('created_at')
                             ->dateTime(),
                     ])
                     ->columns(2),
-                
+
                 Infolists\Components\Section::make('Consumer Information')
                     ->schema([
                         Infolists\Components\TextEntry::make('consumer_name'),
@@ -132,7 +133,7 @@ class OrderResource extends Resource
                         Infolists\Components\TextEntry::make('consumer_identity_number'),
                     ])
                     ->columns(2),
-                
+
                 Infolists\Components\Section::make('Payment Details')
                     ->schema([
                         Infolists\Components\TextEntry::make('subtotal')

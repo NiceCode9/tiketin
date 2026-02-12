@@ -19,7 +19,7 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         return [
-            'order_number' => 'ORD-' . strtoupper(Str::random(10)),
+            'order_number' => 'ORD-'.strtoupper(Str::random(10)),
             'order_token' => $this->faker->uuid(),
             'event_id' => Event::factory(),
             'consumer_name' => $this->faker->name(),

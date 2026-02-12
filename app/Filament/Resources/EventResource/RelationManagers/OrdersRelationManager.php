@@ -7,8 +7,6 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 
 class OrdersRelationManager extends RelationManager
 {
@@ -34,22 +32,22 @@ class OrdersRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('order_number')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('consumer_name')
                     ->searchable(),
-                
+
                 Tables\Columns\TextColumn::make('total_amount')
                     ->money('IDR')
                     ->sortable(),
-                
+
                 Tables\Columns\BadgeColumn::make('payment_status')
                     ->colors([
-                        'secondary' => 'pending',
+                        'warning' => 'pending',
                         'success' => 'paid',
-                        'warning' => 'pending_payment', // Just in case
+                        // 'warning' => 'pending_payment', // Just in case
                         'danger' => ['failed', 'expired', 'cancelled'],
                     ]),
-                
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),

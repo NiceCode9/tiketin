@@ -20,11 +20,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Register policies
-        \Illuminate\Support\Facades\Gate::policy(\App\Models\Event::class, \App\Policies\EventPolicy::class);
-        \Illuminate\Support\Facades\Gate::policy(\App\Models\Order::class, \App\Policies\OrderPolicy::class);
-        \Illuminate\Support\Facades\Gate::policy(\App\Models\Ticket::class, \App\Policies\TicketPolicy::class);
-        \Illuminate\Support\Facades\Gate::policy(\App\Models\PromoCode::class, \App\Policies\PromoCodePolicy::class);
-        \Illuminate\Support\Facades\Gate::policy(\App\Models\Wristband::class, \App\Policies\WristbandPolicy::class);
+        // \Illuminate\Support\Facades\Gate::policy(\App\Models\Event::class, \App\Policies\EventPolicy::class);
+        // \Illuminate\Support\Facades\Gate::policy(\App\Models\Order::class, \App\Policies\OrderPolicy::class);
+        // \Illuminate\Support\Facades\Gate::policy(\App\Models\Ticket::class, \App\Policies\TicketPolicy::class);
+        // \Illuminate\Support\Facades\Gate::policy(\App\Models\PromoCode::class, \App\Policies\PromoCodePolicy::class);
+        // \Illuminate\Support\Facades\Gate::policy(\App\Models\Wristband::class, \App\Policies\WristbandPolicy::class);
 
         // Implicitly grant "Super Admin" role all permissions
         // This works in the app by using gate-related functions like auth()->user->can() and @can()

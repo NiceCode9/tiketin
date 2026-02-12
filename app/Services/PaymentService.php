@@ -103,11 +103,11 @@ class PaymentService
             } elseif ($transaction == 'pending') {
                 $order->update(['payment_status' => 'pending']);
             } elseif ($transaction == 'deny') {
-                $this->processFailedPayment($order, 'deny');
+                $this->processFailedPayment($order, 'failed');
             } elseif ($transaction == 'expire') {
-                $this->processFailedPayment($order, 'expire');
+                $this->processFailedPayment($order, 'expired');
             } elseif ($transaction == 'cancel') {
-                $this->processFailedPayment($order, 'cancel');
+                $this->processFailedPayment($order, 'canceled');
             }
         });
     }
