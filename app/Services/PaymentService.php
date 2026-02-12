@@ -6,8 +6,8 @@ use App\Models\Order;
 use App\Models\PaymentTransaction;
 use Illuminate\Support\Facades\DB;
 use Midtrans\Config;
-use Midtrans\Snap;
 use Midtrans\Notification;
+use Midtrans\Snap;
 
 class PaymentService
 {
@@ -51,20 +51,20 @@ class PaymentService
         try {
             return Snap::getSnapToken($params);
         } catch (\Exception $e) {
-            throw new \Exception('Failed to create payment token: ' . $e->getMessage());
+            throw new \Exception('Failed to create payment token: '.$e->getMessage());
         }
     }
 
     /**
      * Handle payment notification callback from Midtrans
      */
-    public function handleCallback(array $payload = null): void
+    public function handleCallback(?array $payload = null): void
     {
-        // $payload is handled automatically by Midtrans\Notification if not passed, 
+        // $payload is handled automatically by Midtrans\Notification if not passed,
         // but we can pass it if we retrieved it from Request
 
         try {
-            $notif = new Notification();
+            $notif = new Notification;
         } catch (\Exception $e) {
             throw new \Exception('Invalid Midtrans Notification');
         }
@@ -95,18 +95,18 @@ class PaymentService
                 if ($fraud == 'challenge') {
                     // TODO: Set payment status in merchant's database to 'challenge'
                     // For now we don't handle challenge automatically
-                } else if ($fraud == 'accept') {
+                } elseif ($fraud == 'accept') {
                     $this->processSuccessfulPayment($order, (array) $notif->getResponse());
                 }
-            } else if ($transaction == 'settlement') {
+            } elseif ($transaction == 'settlement') {
                 $this->processSuccessfulPayment($order, (array) $notif->getResponse());
-            } else if ($transaction == 'pending') {
+            } elseif ($transaction == 'pending') {
                 $order->update(['payment_status' => 'pending']);
-            } else if ($transaction == 'deny') {
+            } elseif ($transaction == 'deny') {
                 $this->processFailedPayment($order, 'deny');
-            } else if ($transaction == 'expire') {
+            } elseif ($transaction == 'expire') {
                 $this->processFailedPayment($order, 'expire');
-            } else if ($transaction == 'cancel') {
+            } elseif ($transaction == 'cancel') {
                 $this->processFailedPayment($order, 'cancel');
             }
         });

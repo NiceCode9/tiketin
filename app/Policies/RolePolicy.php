@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Order;
+use Spatie\Permission\Models\Role;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class OrderPolicy
+class RolePolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class OrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_order');
+        return $user->can('view_any_role');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Order $order): bool
+    public function view(User $user, Role $role): bool
     {
-        return $user->can('view_order');
+        return $user->can('view_role');
     }
 
     /**
@@ -31,23 +31,23 @@ class OrderPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_order');
+        return $user->can('create_role');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Order $order): bool
+    public function update(User $user, Role $role): bool
     {
-        return $user->can('update_order');
+        return $user->can('update_role');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Order $order): bool
+    public function delete(User $user, Role $role): bool
     {
-        return $user->can('delete_order');
+        return $user->can('delete_role');
     }
 
     /**
@@ -55,15 +55,15 @@ class OrderPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_order');
+        return $user->can('delete_any_role');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Order $order): bool
+    public function forceDelete(User $user, Role $role): bool
     {
-        return $user->can('force_delete_order');
+        return $user->can('{{ ForceDelete }}');
     }
 
     /**
@@ -71,15 +71,15 @@ class OrderPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_order');
+        return $user->can('{{ ForceDeleteAny }}');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Order $order): bool
+    public function restore(User $user, Role $role): bool
     {
-        return $user->can('restore_order');
+        return $user->can('{{ Restore }}');
     }
 
     /**
@@ -87,15 +87,15 @@ class OrderPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_order');
+        return $user->can('{{ RestoreAny }}');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Order $order): bool
+    public function replicate(User $user, Role $role): bool
     {
-        return $user->can('replicate_order');
+        return $user->can('{{ Replicate }}');
     }
 
     /**
@@ -103,6 +103,6 @@ class OrderPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_order');
+        return $user->can('{{ Reorder }}');
     }
 }
