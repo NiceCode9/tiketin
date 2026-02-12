@@ -5,23 +5,26 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\PaymentTransaction;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
+use Midtrans\Config;
+use Midtrans\Snap;
+use Midtrans\Notification;
 
 class PaymentService
 {
-    protected string $serverKey;
-    protected string $clientKey;
-    protected string $baseUrl;
-    protected bool $isProduction;
-
     public function __construct()
     {
-        $this->serverKey = config('midtrans.server_key');
-        $this->clientKey = config('midtrans.client_key');
-        $this->isProduction = config('midtrans.is_production', false);
-        $this->baseUrl = $this->isProduction
-            ? 'https://app.midtrans.com'
-            : 'https://app.sandbox.midtrans.com';
+        $this->configureMidtrans();
+    }
+
+    /**
+     * Configure Midtrans settings
+     */
+    protected function configureMidtrans(): void
+    {
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = config('midtrans.is_sanitized');
+        Config::$is3ds = config('midtrans.is_3ds');
     }
 
     /**
@@ -45,91 +48,68 @@ class PaymentService
             ],
         ];
 
-        $response = Http::withBasicAuth($this->serverKey, '')
-            ->post("{$this->baseUrl}/snap/v1/transactions", $params);
-
-        if ($response->failed()) {
-            throw new \Exception('Failed to create payment token: ' . $response->body());
+        try {
+            return Snap::getSnapToken($params);
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to create payment token: ' . $e->getMessage());
         }
-
-        return $response->json('token');
     }
 
     /**
      * Handle payment notification callback from Midtrans
      */
-    public function handleCallback(array $payload): void
+    public function handleCallback(array $payload = null): void
     {
-        // Verify signature
-        if (!$this->verifySignature($payload)) {
-            throw new \Exception('Invalid signature');
+        // $payload is handled automatically by Midtrans\Notification if not passed, 
+        // but we can pass it if we retrieved it from Request
+
+        try {
+            $notif = new Notification();
+        } catch (\Exception $e) {
+            throw new \Exception('Invalid Midtrans Notification');
         }
 
-        $orderNumber = $payload['order_id'];
-        $transactionStatus = $payload['transaction_status'];
-        $fraudStatus = $payload['fraud_status'] ?? null;
+        $transaction = $notif->transaction_status;
+        $type = $notif->payment_type;
+        $orderId = $notif->order_id;
+        $fraud = $notif->fraud_status;
 
-        $order = Order::where('order_number', $orderNumber)->firstOrFail();
+        $order = Order::where('order_number', $orderId)->firstOrFail();
 
-        DB::transaction(function () use ($order, $payload, $transactionStatus, $fraudStatus) {
+        DB::transaction(function () use ($order, $notif, $transaction, $type, $fraud) {
             // Create or update payment transaction
             PaymentTransaction::updateOrCreate(
                 [
                     'order_id' => $order->id,
-                    'transaction_id' => $payload['transaction_id'],
+                    'transaction_id' => $notif->transaction_id,
                 ],
                 [
-                    'payment_type' => $payload['payment_type'] ?? null,
-                    'gross_amount' => $payload['gross_amount'] ?? $order->total_amount,
-                    'status' => $this->mapTransactionStatus($transactionStatus),
-                    'raw_response' => $payload,
+                    'payment_type' => $type,
+                    'gross_amount' => $notif->gross_amount,
+                    'status' => $transaction,
+                    'raw_response' => (array) $notif->getResponse(),
                 ]
             );
 
-            // Update order status based on transaction status
-            if ($transactionStatus === 'capture') {
-                if ($fraudStatus === 'accept') {
-                    $this->processSuccessfulPayment($order, $payload);
+            if ($transaction == 'capture') {
+                if ($fraud == 'challenge') {
+                    // TODO: Set payment status in merchant's database to 'challenge'
+                    // For now we don't handle challenge automatically
+                } else if ($fraud == 'accept') {
+                    $this->processSuccessfulPayment($order, (array) $notif->getResponse());
                 }
-            } elseif ($transactionStatus === 'settlement') {
-                $this->processSuccessfulPayment($order, $payload);
-            } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
-                $this->processFailedPayment($order, $transactionStatus);
-            } elseif ($transactionStatus === 'pending') {
-                // Payment is pending, no action needed
+            } else if ($transaction == 'settlement') {
+                $this->processSuccessfulPayment($order, (array) $notif->getResponse());
+            } else if ($transaction == 'pending') {
                 $order->update(['payment_status' => 'pending']);
+            } else if ($transaction == 'deny') {
+                $this->processFailedPayment($order, 'deny');
+            } else if ($transaction == 'expire') {
+                $this->processFailedPayment($order, 'expire');
+            } else if ($transaction == 'cancel') {
+                $this->processFailedPayment($order, 'cancel');
             }
         });
-    }
-
-    /**
-     * Verify Midtrans signature
-     */
-    public function verifySignature(array $payload): bool
-    {
-        $orderId = $payload['order_id'];
-        $statusCode = $payload['status_code'];
-        $grossAmount = $payload['gross_amount'];
-        $serverKey = $this->serverKey;
-
-        $signatureKey = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
-
-        return $signatureKey === $payload['signature_key'];
-    }
-
-    /**
-     * Get order status from Midtrans
-     */
-    public function getOrderStatus(string $orderNumber): array
-    {
-        $response = Http::withBasicAuth($this->serverKey, '')
-            ->get("{$this->baseUrl}/v2/{$orderNumber}/status");
-
-        if ($response->failed()) {
-            throw new \Exception('Failed to get order status');
-        }
-
-        return $response->json();
     }
 
     /**
@@ -138,14 +118,11 @@ class PaymentService
     protected function processSuccessfulPayment(Order $order, array $paymentData): void
     {
         if ($order->isPaid()) {
-            // Already processed
             return;
         }
 
         $orderService = app(OrderService::class);
         $orderService->markAsPaid($order, $paymentData);
-
-        // TODO: Send payment success notification
     }
 
     /**
@@ -154,25 +131,6 @@ class PaymentService
     protected function processFailedPayment(Order $order, string $status): void
     {
         $order->update(['payment_status' => $status]);
-
-        // Release seats and quota
-        $orderService = app(OrderService::class);
-        // This would be handled by the expiration job
-    }
-
-    /**
-     * Map Midtrans transaction status to our status
-     */
-    protected function mapTransactionStatus(string $status): string
-    {
-        return match ($status) {
-            'capture', 'settlement' => 'settlement',
-            'pending' => 'pending',
-            'deny' => 'deny',
-            'cancel' => 'cancel',
-            'expire' => 'expire',
-            default => 'pending',
-        };
     }
 
     /**
@@ -184,14 +142,13 @@ class PaymentService
 
         foreach ($order->orderItems as $item) {
             $items[] = [
-                'id' => $item->ticket_category_id,
+                'id' => (string) $item->ticket_category_id,
                 'price' => (int) $item->unit_price,
                 'quantity' => $item->quantity,
-                'name' => $item->ticketCategory->name,
+                'name' => substr($item->ticketCategory->name, 0, 50), // Midtrans limit
             ];
         }
 
-        // Add discount as negative item if applicable
         if ($order->discount_amount > 0) {
             $items[] = [
                 'id' => 'DISCOUNT',

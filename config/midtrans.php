@@ -1,21 +1,11 @@
 <?php
 
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Midtrans Configuration
-    |--------------------------------------------------------------------------
-    */
-
     'server_key' => env('MIDTRANS_SERVER_KEY'),
     'client_key' => env('MIDTRANS_CLIENT_KEY'),
     'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Ticketing Configuration
-    |--------------------------------------------------------------------------
-    */
-
-    'order_expiration_minutes' => env('ORDER_EXPIRATION_MINUTES', 30),
+    'is_sanitized' => env('MIDTRANS_IS_SANITIZED', true),
+    'is_3ds' => env('MIDTRANS_IS_3DS', true),
+    'snap_url' => env('MIDTRANS_IS_PRODUCTION', false) ? 'https://app.midtrans.com/snap/snap.js'
+        : 'https://app.sandbox.midtrans.com/snap/snap.js',
 ];
