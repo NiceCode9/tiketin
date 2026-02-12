@@ -26,6 +26,8 @@ class Event extends Model
         'has_assigned_seating',
         'wristband_exchange_start',
         'wristband_exchange_end',
+        'banner_image',
+        'additional_images',
     ];
 
     protected $casts = [
@@ -34,6 +36,7 @@ class Event extends Model
         'has_assigned_seating' => 'boolean',
         'wristband_exchange_start' => 'datetime',
         'wristband_exchange_end' => 'datetime',
+        'additional_images' => 'array',
     ];
 
     /**
@@ -78,9 +81,9 @@ class Event extends Model
     /**
      * An event has many tickets
      */
-    public function tickets(): HasMany
+    public function tickets(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
-        return $this->hasMany(Ticket::class)->through('orders');
+        return $this->hasManyThrough(Ticket::class, Order::class);
     }
 
     /**

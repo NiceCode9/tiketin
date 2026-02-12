@@ -13,11 +13,13 @@ class Venue extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'client_id',
         'name',
         'address',
         'city',
         'capacity',
         'has_seating',
+        'image',
     ];
 
     protected $casts = [

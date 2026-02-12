@@ -55,6 +55,18 @@ class EventResource extends Resource
                         Forms\Components\RichEditor::make('description')
                             ->columnSpanFull(),
                         
+                        Forms\Components\FileUpload::make('banner_image')
+                            ->image()
+                            ->imageEditor()
+                            ->directory('event-banners')
+                            ->columnSpanFull(),
+                        
+                        Forms\Components\FileUpload::make('additional_images')
+                            ->image()
+                            ->multiple()
+                            ->directory('event-gallery')
+                            ->columnSpanFull(),
+                        
                         Forms\Components\Select::make('venue_id')
                             ->label('Venue')
                             ->relationship('venue', 'name')
@@ -69,6 +81,10 @@ class EventResource extends Resource
                                     ->numeric(),
                                 Forms\Components\Toggle::make('has_seating')
                                     ->label('Has Assigned Seating'),
+                                Forms\Components\FileUpload::make('image')
+                                    ->image()
+                                    ->directory('venue-images')
+                                    ->columnSpanFull(),
                             ]),
                         
                         Forms\Components\Select::make('status')
@@ -196,7 +212,11 @@ class EventResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Resources\EventResource\RelationManagers\TicketCategoriesRelationManager::class,
+            \App\Filament\Resources\EventResource\RelationManagers\TicketsRelationManager::class,
+            \App\Filament\Resources\EventResource\RelationManagers\OrdersRelationManager::class,
+            \App\Filament\Resources\EventResource\RelationManagers\PromoCodesRelationManager::class,
+            \App\Filament\Resources\EventResource\RelationManagers\ScanLogsRelationManager::class,
         ];
     }
 
