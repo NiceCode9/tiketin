@@ -40,10 +40,7 @@
             </div>
 
             <!-- Active Filters Display -->
-            @php
-                $hasFilters = request()->hasAny(['search', 'category', 'location', 'price_range', 'period']);
-            @endphp
-            @if ($hasFilters)
+            @if (request()->hasAny(['search', 'category', 'location', 'price_range', 'period']))
                 <div class="mb-6 flex flex-wrap gap-2 items-center">
                     <span class="text-sm text-gray-600">Filter aktif:</span>
 
@@ -59,11 +56,11 @@
                     @endif
 
                     @if (request('category'))
-                        @foreach ((array)request('category') as $cat)
+                        @foreach (request('category') as $cat)
                             <span
                                 class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
-                                {{ ucfirst(str_replace('-', ' ', $cat)) }}
-                                <a href="{{ route('events.index', array_merge(request()->except('category'), ['category' => array_diff((array)request('category', []), [$cat])])) }}"
+                                {{ ucfirst($cat) }}
+                                <a href="{{ route('events.index', array_merge(request()->except('category'), ['category' => array_diff(request('category', []), [$cat])])) }}"
                                     class="ml-2 hover:text-red-600">
                                     <i class="fas fa-times"></i>
                                 </a>
@@ -76,6 +73,17 @@
                             class="inline-flex items-center bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
                             {{ ucfirst(request('location')) }}
                             <a href="{{ route('events.index', request()->except('location')) }}"
+                                class="ml-2 hover:text-red-600">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </span>
+                    @endif
+
+                    @if (request('price_range') && request('price_range') !== 'all')
+                        <span
+                            class="inline-flex items-center bg-purple-100 text-purple-800 text-xs font-semibold px-3 py-1 rounded-full">
+                            Price: {{ request('price_range') }}
+                            <a href="{{ route('events.index', request()->except('price_range')) }}"
                                 class="ml-2 hover:text-red-600">
                                 <i class="fas fa-times"></i>
                             </a>
@@ -114,7 +122,7 @@
                                 <h3 class="font-bold text-lg text-slate-900">
                                     <i class="fas fa-filter text-brand-yellow mr-2"></i> Filter
                                 </h3>
-                                @if ($hasFilters)
+                                @if (request()->hasAny(['category', 'location', 'price_range', 'period']))
                                     <a href="{{ route('events.index', request()->only('search')) }}"
                                         class="text-xs text-red-600 hover:underline font-semibold">
                                         <i class="fas fa-redo mr-1"></i> Reset
@@ -128,17 +136,41 @@
                                     <i class="fas fa-tags text-brand-yellow mr-2"></i> Kategori
                                 </h4>
                                 <div class="space-y-2">
-                                    @foreach(['konser', 'standup-comedy', 'workshop', 'olahraga', 'festival'] as $catSlug)
-                                        <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
-                                            <input type="checkbox" name="category[]" value="{{ $catSlug }}"
-                                                {{ in_array($catSlug, (array)request('category', [])) ? 'checked' : '' }}
-                                                class="rounded text-brand-yellow focus:ring-brand-yellow"
-                                                onchange="document.getElementById('filter-form').submit()">
-                                            <span class="ml-3 text-gray-700 text-sm">
-                                                @if($catSlug == 'konser') 🎸 Konser Musik @elseif($catSlug == 'standup-comedy') 😂 Stand Up Comedy @elseif($catSlug == 'workshop') 📚 Seminar & Workshop @elseif($catSlug == 'olahraga') ⚽ Olahraga @else 🎉 Festival @endif
-                                            </span>
-                                        </label>
-                                    @endforeach
+                                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                                        <input type="checkbox" name="category[]" value="konser"
+                                            {{ in_array('konser', request('category', [])) ? 'checked' : '' }}
+                                            class="rounded text-brand-yellow focus:ring-brand-yellow"
+                                            onchange="document.getElementById('filter-form').submit()">
+                                        <span class="ml-3 text-gray-700 text-sm">🎸 Konser Musik</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                                        <input type="checkbox" name="category[]" value="standup"
+                                            {{ in_array('standup', request('category', [])) ? 'checked' : '' }}
+                                            class="rounded text-brand-yellow focus:ring-brand-yellow"
+                                            onchange="document.getElementById('filter-form').submit()">
+                                        <span class="ml-3 text-gray-700 text-sm">😂 Stand Up Comedy</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                                        <input type="checkbox" name="category[]" value="workshop"
+                                            {{ in_array('workshop', request('category', [])) ? 'checked' : '' }}
+                                            class="rounded text-brand-yellow focus:ring-brand-yellow"
+                                            onchange="document.getElementById('filter-form').submit()">
+                                        <span class="ml-3 text-gray-700 text-sm">📚 Seminar & Workshop</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                                        <input type="checkbox" name="category[]" value="olahraga"
+                                            {{ in_array('olahraga', request('category', [])) ? 'checked' : '' }}
+                                            class="rounded text-brand-yellow focus:ring-brand-yellow"
+                                            onchange="document.getElementById('filter-form').submit()">
+                                        <span class="ml-3 text-gray-700 text-sm">⚽ Olahraga</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                                        <input type="checkbox" name="category[]" value="festival"
+                                            {{ in_array('festival', request('category', [])) ? 'checked' : '' }}
+                                            class="rounded text-brand-yellow focus:ring-brand-yellow"
+                                            onchange="document.getElementById('filter-form').submit()">
+                                        <span class="ml-3 text-gray-700 text-sm">🎉 Festival</span>
+                                    </label>
                                 </div>
                             </div>
 
@@ -151,12 +183,70 @@
                                     class="w-full border-2 border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-brand-yellow transition"
                                     onchange="document.getElementById('filter-form').submit()">
                                     <option value="">Semua Lokasi</option>
-                                    @foreach(['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Bali'] as $loc)
-                                        <option value="{{ strtolower($loc) }}" {{ request('location') == strtolower($loc) ? 'selected' : '' }}>
-                                            {{ $loc }}
-                                        </option>
-                                    @endforeach
+                                    <option value="jakarta" {{ request('location') == 'jakarta' ? 'selected' : '' }}>
+                                        Jakarta</option>
+                                    <option value="bandung" {{ request('location') == 'bandung' ? 'selected' : '' }}>
+                                        Bandung</option>
+                                    <option value="surabaya" {{ request('location') == 'surabaya' ? 'selected' : '' }}>
+                                        Surabaya</option>
+                                    <option value="yogyakarta"
+                                        {{ request('location') == 'yogyakarta' ? 'selected' : '' }}>Yogyakarta</option>
+                                    <option value="bali" {{ request('location') == 'bali' ? 'selected' : '' }}>Bali
+                                    </option>
+                                    <option value="medan" {{ request('location') == 'medan' ? 'selected' : '' }}>Medan
+                                    </option>
+                                    <option value="semarang" {{ request('location') == 'semarang' ? 'selected' : '' }}>
+                                        Semarang</option>
                                 </select>
+                            </div>
+
+                            <!-- Filter: Harga -->
+                            <div class="mb-6 pb-6 border-b border-gray-200">
+                                <h4 class="font-semibold text-sm mb-3 text-slate-900">
+                                    <i class="fas fa-money-bill-wave text-brand-yellow mr-2"></i> Range Harga
+                                </h4>
+                                <div class="space-y-2">
+                                    <label
+                                        class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                                        <input type="radio" name="price_range" value="all"
+                                            {{ request('price_range', 'all') == 'all' ? 'checked' : '' }}
+                                            class="text-brand-yellow focus:ring-brand-yellow"
+                                            onchange="document.getElementById('filter-form').submit()">
+                                        <span class="ml-3 text-gray-700 text-sm">Semua Harga</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                                        <input type="radio" name="price_range" value="0-100000"
+                                            {{ request('price_range') == '0-100000' ? 'checked' : '' }}
+                                            class="text-brand-yellow focus:ring-brand-yellow"
+                                            onchange="document.getElementById('filter-form').submit()">
+                                        <span class="ml-3 text-gray-700 text-sm">&lt; Rp 100.000</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                                        <input type="radio" name="price_range" value="100000-300000"
+                                            {{ request('price_range') == '100000-300000' ? 'checked' : '' }}
+                                            class="text-brand-yellow focus:ring-brand-yellow"
+                                            onchange="document.getElementById('filter-form').submit()">
+                                        <span class="ml-3 text-gray-700 text-sm">Rp 100K - 300K</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                                        <input type="radio" name="price_range" value="300000-500000"
+                                            {{ request('price_range') == '300000-500000' ? 'checked' : '' }}
+                                            class="text-brand-yellow focus:ring-brand-yellow"
+                                            onchange="document.getElementById('filter-form').submit()">
+                                        <span class="ml-3 text-gray-700 text-sm">Rp 300K - 500K</span>
+                                    </label>
+                                    <label
+                                        class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                                        <input type="radio" name="price_range" value="500000-999999999"
+                                            {{ request('price_range') == '500000-999999999' ? 'checked' : '' }}
+                                            class="text-brand-yellow focus:ring-brand-yellow"
+                                            onchange="document.getElementById('filter-form').submit()">
+                                        <span class="ml-3 text-gray-700 text-sm">&gt; Rp 500K</span>
+                                    </label>
+                                </div>
                             </div>
 
                             <!-- Filter: Tanggal -->
@@ -168,9 +258,12 @@
                                     class="w-full border-2 border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:border-brand-yellow transition"
                                     onchange="document.getElementById('filter-form').submit()">
                                     <option value="">Semua Waktu</option>
-                                    <option value="today" {{ request('period') == 'today' ? 'selected' : '' }}>Hari Ini</option>
-                                    <option value="week" {{ request('period') == 'week' ? 'selected' : '' }}>Minggu Ini</option>
-                                    <option value="month" {{ request('period') == 'month' ? 'selected' : '' }}>Bulan Ini</option>
+                                    <option value="today" {{ request('period') == 'today' ? 'selected' : '' }}>Hari Ini
+                                    </option>
+                                    <option value="week" {{ request('period') == 'week' ? 'selected' : '' }}>Minggu Ini
+                                    </option>
+                                    <option value="month" {{ request('period') == 'month' ? 'selected' : '' }}>Bulan Ini
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -202,9 +295,14 @@
                             <select name="sort" id="sort"
                                 class="border-2 border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-brand-yellow transition"
                                 onchange="document.getElementById('sort-form').submit()">
-                                <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Terbaru</option>
-                                <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Harga Terendah</option>
-                                <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Harga Tertinggi</option>
+                                <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Terbaru
+                                </option>
+                                <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Harga
+                                    Terendah</option>
+                                <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Harga
+                                    Tertinggi</option>
+                                <option value="popular" {{ request('sort') == 'popular' ? 'selected' : '' }}>Terpopuler
+                                </option>
                             </select>
                         </form>
                     </div>
@@ -218,24 +316,22 @@
                                     <div class="relative h-48 overflow-hidden">
                                         <img src="{{ $event->poster_image ? asset('storage/' . $event->poster_image) : 'https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?auto=format&fit=crop&w=800&q=80' }}"
                                             class="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                                            alt="{{ $event->name }}">
+                                            alt="{{ $event->name ?? $event->title }}">
 
                                         <!-- Category Badge -->
-                                        @if($event->eventCategory)
                                         <span
                                             class="absolute top-3 left-3 bg-brand-yellow text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                                            {{ $event->eventCategory->name }}
+                                            {{ ucfirst($event->category) }}
                                         </span>
-                                        @endif
 
                                         <!-- Date Badge -->
                                         <div
                                             class="absolute top-3 right-3 bg-white/95 backdrop-blur text-center px-2 py-1 rounded-lg shadow-lg">
                                             <div class="text-xs font-bold text-brand-yellow">
-                                                {{ $event->event_date->format('d') }}
+                                                {{ \Carbon\Carbon::parse($event->event_date)->format('d') }}
                                             </div>
                                             <div class="text-xs text-gray-600">
-                                                {{ $event->event_date->format('M') }}
+                                                {{ \Carbon\Carbon::parse($event->event_date)->format('M') }}
                                             </div>
                                         </div>
                                     </div>
@@ -243,27 +339,24 @@
                                     <div class="p-5">
                                         <h3
                                             class="font-bold text-lg mb-2 text-slate-900 group-hover:text-brand-yellow transition line-clamp-2">
-                                            {{ $event->name }}
+                                            {{ $event->name ?? $event->title }}
                                         </h3>
 
                                         <div class="flex items-center text-gray-600 text-sm mb-3">
                                             <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
-                                            <span class="line-clamp-1">{{ $event->venue->name ?? 'TBA' }}</span>
+                                            <span class="line-clamp-1">{{ $event->venue }}</span>
                                         </div>
 
                                         <div class="flex items-center text-gray-600 text-sm mb-4">
                                             <i class="fas fa-clock text-blue-500 mr-2"></i>
-                                            <span>{{ $event->event_date->format('H:i') }} WIB</span>
+                                            <span>{{ \Carbon\Carbon::parse($event->event_date)->format('H:i') }} WIB</span>
                                         </div>
 
                                         <div class="border-t border-gray-200 pt-3 flex justify-between items-center">
                                             <span class="text-xs text-gray-500">Mulai dari</span>
                                             <span class="font-bold text-lg text-brand-yellow">
-                                                @if($event->ticketCategories->count() > 0)
-                                                    Rp {{ number_format($event->ticketCategories->min('price'), 0, ',', '.') }}
-                                                @else
-                                                    TBA
-                                                @endif
+                                                Rp
+                                                {{ number_format($event->min_price ?? ($event->price_regular ?? 0), 0, ',', '.') }}
                                             </span>
                                         </div>
                                     </div>
@@ -285,12 +378,38 @@
                     </div>
 
                     <!-- Pagination -->
-                    <div class="flex justify-center mt-12">
-                        {{ $events->links() }}
-                    </div>
+                    @if ($events->hasPages())
+                        <div class="flex justify-center">
+                            <div class="bg-white rounded-xl shadow-md p-4">
+                                {{ $events->links() }}
+                            </div>
+                        </div>
+                    @endif
 
                 </div>
             </div>
         </div>
     </div>
 @endsection
+
+@push('styles')
+    <style>
+        /* Custom pagination styling */
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .pagination .page-link {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #FCD34D;
+            color: #000;
+            font-weight: bold;
+        }
+    </style>
+@endpush

@@ -6,19 +6,31 @@ use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 // Public event browsing
-Route::get('/', [EventController::class, 'index'])->name('home');
+Route::get('/', [EventController::class, 'home'])->name('home');
+Route::get('/about', function(){
+    return view('about');
+})->name('about');
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{slug}', [EventController::class, 'show'])->name('events.show');
+
+// Tracking
+Route::get('/tracking', [App\Http\Controllers\TrackingController::class, 'index'])->name('tracking.index');
+Route::post('/tracking', [App\Http\Controllers\TrackingController::class, 'track'])->name('tracking.track');
+Route::get('/tracking/{orderNumber}', [App\Http\Controllers\TrackingController::class, 'show'])->name('tracking.detail');
+Route::get('/tracking/download-invoice/{orderNumber}', [App\Http\Controllers\TrackingController::class, 'downloadInvoice'])->name('tracking.download-invoice');
 
 // Order creation and checkout
 Route::get('/events/{slug}/order', [OrderController::class, 'create'])->name('orders.create');
 Route::post('/events/{slug}/order', [OrderController::class, 'store'])->name('orders.store');
-Route::get('/orders/{orderToken}/checkout', [OrderController::class, 'checkout'])->name('orders.checkout');
-Route::post('/orders/{orderToken}/promo', [OrderController::class, 'applyPromo'])->name('orders.applyPromo');
-Route::get('/orders/{orderToken}', [OrderController::class, 'show'])->name('orders.show');
+Route::get('/checkout/{token}', [OrderController::class, 'checkout'])->name('orders.checkout');
+Route::post('/checkout/{token}/promo', [OrderController::class, 'applyPromo'])->name('orders.promo');
+Route::get('/orders/{token}', [OrderController::class, 'show'])->name('orders.show');
+
+// Payment status checks (AJAX)
+Route::get('/orders/{token}/status', [OrderController::class, 'checkStatus'])->name('orders.status-check');
+Route::post('/orders/{token}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
 // Payment
-Route::get('/orders/{orderToken}/payment', [PaymentController::class, 'initiate'])->name('payment.initiate');
 Route::post('/payment/callback', [PaymentController::class, 'callback'])
     ->middleware('validate.webhook')
     ->name('payment.callback');

@@ -28,6 +28,7 @@ class Order extends Model
         'total_amount',
         'payment_status',
         'payment_method',
+        'snap_token',
         'paid_at',
         'expires_at',
     ];

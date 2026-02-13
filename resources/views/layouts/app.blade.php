@@ -9,6 +9,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Untix') }} - @yield('title', 'E-Ticketing Platform')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -63,7 +65,7 @@
 
                 <!-- Auth Buttons -->
                 <div class="hidden md:flex items-center space-x-4">
-                    <button class="text-white hover:text-brand-yellow transition">
+                    {{-- <button class="text-white hover:text-brand-yellow transition">
                         <i class="fas fa-search text-lg"></i>
                     </button>
                     <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-700 text-white">
@@ -86,7 +88,7 @@
                             class="bg-brand-yellow hover:bg-yellow-400 text-black font-bold py-2 px-6 rounded-lg transition transform hover:scale-105">
                             Masuk
                         </a>
-                    @endauth
+                    @endauth --}}
                 </div>
 
                 <!-- Mobile Menu Button -->

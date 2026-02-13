@@ -12,7 +12,18 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: [
+                    'Inter',
+                    'Instrument Sans',
+                    ...defaultTheme.fontFamily.sans,
+                ],
+            },
+            colors: {
+                brand: {
+                    yellow: '#FCEE23',
+                    dark: '#0f172a',
+                    light: '#f8fafc',
+                },
             },
         },
     },

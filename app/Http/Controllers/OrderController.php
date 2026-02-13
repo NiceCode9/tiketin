@@ -7,13 +7,15 @@ use App\Models\Order;
 use App\Services\OrderService;
 use App\Services\PromoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
     public function __construct(
         protected OrderService $orderService,
-        protected PromoService $promoService
+        protected PromoService $promoService,
+        protected \App\Services\PaymentService $paymentService
     ) {}
 
     /**
@@ -47,7 +49,7 @@ class OrderController extends Controller
             'consumer_name' => 'required|string|max:255',
             'consumer_email' => 'required|email|max:255',
             'consumer_whatsapp' => 'required|string|max:255',
-            'consumer_identity_type' => 'required|in:ktp,sim,passport',
+            'consumer_identity_type' => 'required|in:KTP,SIM,Student Card,Passport',
             'consumer_identity_number' => 'required|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.ticket_category_id' => 'required|exists:ticket_categories,id',
@@ -70,8 +72,11 @@ class OrderController extends Controller
                 'items' => $request->items,
             ]);
 
+            Log::info('Order created: ' . $order->order_token); 
+
             return redirect()->route('orders.checkout', $order->order_token);
         } catch (\Exception $e) {
+            Log::error('Order creation failed: ' . $e->getMessage());
             return back()->with('error', $e->getMessage())->withInput();
         }
     }
@@ -93,6 +98,17 @@ class OrderController extends Controller
         if ($order->expires_at < now()) {
             return redirect()->route('orders.show', $orderToken)
                 ->with('error', 'Order has expired');
+        }
+
+        // Generate Snap Token if not already exist
+        if (!$order->snap_token) {
+            try {
+                $snapToken = $this->paymentService->createSnapToken($order);
+                $order->update(['snap_token' => $snapToken]);
+            } catch (\Exception $e) {
+                Log::error('Midtrans Snap Token Error: ' . $e->getMessage());
+                return back()->with('error', 'Gagal membuat token pembayaran. Silakan hubungi dukungan.');
+            }
         }
 
         return view('orders.checkout', compact('order'));
@@ -139,5 +155,32 @@ class OrderController extends Controller
             ->firstOrFail();
 
         return view('orders.show', compact('order'));
+    }
+
+    /**
+     * Check order status (AJAX)
+     */
+    public function checkStatus(string $orderToken)
+    {
+        $order = Order::where('order_token', $orderToken)->firstOrFail();
+        
+        return response()->json([
+            'status' => $order->payment_status,
+            'is_paid' => $order->payment_status === 'success',
+        ]);
+    }
+
+    /**
+     * Cancel order
+     */
+    public function cancel(string $orderToken)
+    {
+        $order = Order::where('order_token', $orderToken)->firstOrFail();
+        
+        if ($order->payment_status === 'pending') {
+            $order->update(['payment_status' => 'cancelled']);
+        }
+        
+        return redirect()->route('home')->with('error', 'Pesanan telah dibatalkan.');
     }
 }
