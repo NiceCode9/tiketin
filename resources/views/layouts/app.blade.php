@@ -47,14 +47,14 @@
                         class="px-4 py-2 rounded-full font-medium transition {{ request()->routeIs('events.*') ? 'bg-brand-yellow text-black' : 'text-white hover:text-brand-yellow' }}">
                         Jelajah
                     </a>
-                    <a href="{{ route('tracking.index') }}"
+                    {{-- <a href="{{ route('tracking.index') }}"
                         class="px-4 py-2 rounded-full {{ request()->routeIs('tracking.*') ? 'bg-brand-yellow text-black' : 'text-white hover:text-brand-yellow' }} font-medium transition">
                         Tracking Pesanan
                     </a>
                     <a href="{{ route('about') }}"
                         class="px-4 py-2 rounded-full {{ request()->routeIs('about') ? 'bg-brand-yellow text-black' : 'text-white hover:text-brand-yellow' }} font-medium transition">
                         Tentang
-                    </a>
+                    </a> --}}
                     <a href="#"
                         class="px-4 py-2 rounded-full text-white hover:text-brand-yellow font-medium transition">
                         Hubungi Kami
@@ -109,14 +109,14 @@
                     class="block px-3 py-2 text-base font-medium rounded-lg {{ request()->routeIs('events.*') ? 'bg-brand-yellow text-black' : 'text-white hover:bg-gray-700' }}">
                     Jelajah
                 </a>
-                <a href="{{ route('tracking.index') }}"
+                {{-- <a href="{{ route('tracking.index') }}"
                     class="block px-3 py-2 text-base font-medium text-white hover:bg-gray-700 rounded-lg">
                     Tracking
                 </a>
                 <a href="{{ route('about') }}"
                     class="block px-3 py-2 text-base font-medium text-white hover:bg-gray-700 rounded-lg">
                     Tentang Kami
-                </a>
+                </a> --}}
                 <a href="#" class="block px-3 py-2 text-base font-medium text-white hover:bg-gray-700 rounded-lg">
                     Hubungi Kami
                 </a>
@@ -147,6 +147,22 @@
          MAIN CONTENT
     ========================================================================== -->
     <main class="flex-grow pt-16">
+        @if (session('success'))
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                    {{ session('success') }}
+                </div>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    {{ session('error') }}
+                </div>
+            </div>
+        @endif
+
         @yield('content')
     </main>
     <!-- ================= END MAIN CONTENT ================= -->

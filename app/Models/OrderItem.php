@@ -48,4 +48,28 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Seat::class);
     }
+
+    /**
+     * Check if order is paid
+     */
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'success' || $this->payment_status === 'paid';
+    }
+
+    /**
+     * Get the first promo code usage for this order
+     */
+    public function getPromoUsageAttribute()
+    {
+        return $this->promoCodeUsages()->first();
+    }
+
+    /**
+     * Compatibility accessor for ticket type
+     */
+    public function getTicketTypeAttribute()
+    {
+        return $this->ticketCategory;
+    }
 }

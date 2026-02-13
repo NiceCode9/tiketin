@@ -30,6 +30,7 @@ class Order extends Model
         'payment_method',
         'paid_at',
         'expires_at',
+        'invoice_path',
     ];
 
     protected $casts = [
@@ -46,18 +47,13 @@ class Order extends Model
     protected static function booted(): void
     {
         static::addGlobalScope(new ClientScope);
-        
+
         // Auto-generate order number and token
         static::creating(function ($order) {
             if (empty($order->order_number)) {
-                $order->order_number = 'TKT-' . date('Ymd') . '-' . str_pad(
-                    static::whereDate('created_at', today())->count() + 1,
-                    4,
-                    '0',
-                    STR_PAD_LEFT
-                );
+                $order->order_number = 'ORD-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -6));
             }
-            
+
             if (empty($order->order_token)) {
                 $order->order_token = Str::uuid();
             }
@@ -109,7 +105,7 @@ class Order extends Model
      */
     public function isPaid(): bool
     {
-        return $this->payment_status === 'success';
+        return $this->payment_status === 'success' || $this->payment_status === 'paid';
     }
 
     /**
@@ -118,5 +114,46 @@ class Order extends Model
     public function isExpired(): bool
     {
         return $this->expires_at && now()->isAfter($this->expires_at);
+    }
+
+    /**
+     * Get a virtual customer object for compatibility with frontend examples
+     */
+    public function getCustomerAttribute(): object
+    {
+        return (object) [
+            'full_name' => $this->consumer_name,
+            'email' => $this->consumer_email,
+            'phone_number' => $this->consumer_whatsapp,
+        ];
+    }
+
+    /**
+     * Get status badge info
+     */
+    public function getStatusBadge(): array
+    {
+        return match ($this->payment_status) {
+            'paid', 'success' => [
+                'label' => 'Sudah Dibayar',
+                'color' => 'success',
+            ],
+            'pending' => [
+                'label' => 'Menunggu Pembayaran',
+                'color' => 'warning',
+            ],
+            'expired' => [
+                'label' => 'Kadaluarsa',
+                'color' => 'danger',
+            ],
+            'failed' => [
+                'label' => 'Gagal',
+                'color' => 'danger',
+            ],
+            default => [
+                'label' => 'Unknown',
+                'color' => 'info',
+            ],
+        };
     }
 }

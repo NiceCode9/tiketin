@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Order;
-use App\Models\Ticket;
 use App\Models\Seat;
+use App\Models\Ticket;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -15,7 +15,7 @@ class TicketService
      */
     public function generateTickets(Order $order): Collection
     {
-        if (!$order->isPaid()) {
+        if (! $order->isPaid()) {
             throw new \Exception('Order must be paid before generating tickets');
         }
 
@@ -49,7 +49,7 @@ class TicketService
     {
         $ticket = Ticket::where('uuid', $uuid)->firstOrFail();
 
-        if (!$ticket->verifyChecksum($checksum)) {
+        if (! $ticket->verifyChecksum($checksum)) {
             throw new \Exception('Invalid QR code checksum');
         }
 
@@ -62,7 +62,7 @@ class TicketService
     public function canExchangeForWristband(Ticket $ticket): bool
     {
         // Must be paid
-        if (!$ticket->isPaid()) {
+        if (! $ticket->isPaid()) {
             return false;
         }
 
@@ -73,7 +73,7 @@ class TicketService
 
         // Check if wristband exchange window is active
         $event = $ticket->order->event;
-        if (!$event->isWristbandExchangeActive()) {
+        if (! $event->isWristbandExchangeActive()) {
             return false;
         }
 

@@ -13,7 +13,8 @@ class OrderController extends Controller
 {
     public function __construct(
         protected OrderService $orderService,
-        protected PromoService $promoService
+        protected PromoService $promoService,
+        protected \App\Services\InvoiceService $invoiceService
     ) {}
 
     /**
@@ -47,7 +48,7 @@ class OrderController extends Controller
             'consumer_name' => 'required|string|max:255',
             'consumer_email' => 'required|email|max:255',
             'consumer_whatsapp' => 'required|string|max:255',
-            'consumer_identity_type' => 'required|in:ktp,sim,passport',
+            'consumer_identity_type' => 'required|in:KTP,SIM,Student Card,Passport',
             'consumer_identity_number' => 'required|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.ticket_category_id' => 'required|exists:ticket_categories,id',
@@ -116,7 +117,7 @@ class OrderController extends Controller
                 $order->subtotal
             );
 
-            if (!$result['valid']) {
+            if (! $result['valid']) {
                 return back()->with('error', $result['message']);
             }
 
@@ -129,9 +130,6 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * Show order details
-     */
     public function show(string $orderToken)
     {
         $order = Order::where('order_token', $orderToken)
@@ -139,5 +137,21 @@ class OrderController extends Controller
             ->firstOrFail();
 
         return view('orders.show', compact('order'));
+    }
+
+    /**
+     * Download or stream invoice PDF
+     */
+    public function downloadInvoice(string $orderToken)
+    {
+        $order = Order::where('order_token', $orderToken)
+            ->with(['event', 'orderItems.ticketCategory', 'promoCodeUsages.promoCode'])
+            ->firstOrFail();
+
+        if (! $order->isPaid()) {
+            return back()->with('error', 'Invoice is only available for paid orders.');
+        }
+
+        return $this->invoiceService->downloadInvoice($order);
     }
 }

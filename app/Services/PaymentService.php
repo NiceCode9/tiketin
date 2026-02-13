@@ -44,7 +44,7 @@ class PaymentService
             ],
             'item_details' => $this->getItemDetails($order),
             'callbacks' => [
-                'finish' => route('payment.finish', ['order' => $order->order_token]),
+                'finish' => route('payment.finish', ['orderToken' => $order->order_token]),
             ],
         ];
 

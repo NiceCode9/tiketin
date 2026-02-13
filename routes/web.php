@@ -16,6 +16,7 @@ Route::post('/events/{slug}/order', [OrderController::class, 'store'])->name('or
 Route::get('/orders/{orderToken}/checkout', [OrderController::class, 'checkout'])->name('orders.checkout');
 Route::post('/orders/{orderToken}/promo', [OrderController::class, 'applyPromo'])->name('orders.applyPromo');
 Route::get('/orders/{orderToken}', [OrderController::class, 'show'])->name('orders.show');
+Route::get('/orders/{orderToken}/invoice', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
 
 // Payment
 Route::get('/orders/{orderToken}/payment', [PaymentController::class, 'initiate'])->name('payment.initiate');

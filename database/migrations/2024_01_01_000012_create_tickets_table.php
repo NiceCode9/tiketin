@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('checksum'); // For QR validation
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Critical index for QR scanning
             $table->index('uuid');
         });

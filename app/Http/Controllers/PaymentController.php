@@ -35,7 +35,7 @@ class PaymentController extends Controller
 
             return view('payment.initiate', compact('order', 'snapToken'));
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to initiate payment: ' . $e->getMessage());
+            return back()->with('error', 'Failed to initiate payment: '.$e->getMessage());
         }
     }
 
@@ -51,7 +51,7 @@ class PaymentController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }

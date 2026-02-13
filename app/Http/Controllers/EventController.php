@@ -12,12 +12,33 @@ class EventController extends Controller
      */
     public function index(Request $request)
     {
-        $events = Event::where('status', 'published')
+        $query = Event::where('status', 'published')
             ->where('event_date', '>=', now())
-            ->orderBy('event_date', 'asc')
-            ->paginate(12);
+            ->with(['venue', 'eventCategory']);
 
-        return view('events.index', compact('events'));
+        // Search by event name
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%'.$request->search.'%');
+        }
+
+        // Filter by category
+        if ($request->filled('category')) {
+            $query->where('event_category_id', $request->category);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('event_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('event_date', '<=', $request->date_to);
+        }
+
+        $events = $query->orderBy('event_date', 'asc')->paginate(12);
+        $categories = \App\Models\EventCategory::all();
+
+        return view('events.index', compact('events', 'categories'));
     }
 
     /**
