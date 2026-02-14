@@ -6,6 +6,23 @@
     <div class="py-12 bg-slate-50 min-h-screen">
         <div class="container mx-auto px-4 max-w-4xl">
 
+            {{-- Polling and Manual Refresh for Pending Orders --}}
+            @if ($order->payment_status === 'pending')
+                <div x-data="{
+                    status: '{{ $order->payment_status }}',
+                    checkStatus() {
+                        fetch('{{ route('orders.status', $order->order_token) }}')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status !== this.status) {
+                                    window.location.reload();
+                                }
+                            });
+                    }
+                }" x-init="setInterval(() => checkStatus(), 5000)">
+                </div>
+            @endif
+
             {{-- Status Alerts --}}
             @if ($order->isPaid())
                 <div class="bg-emerald-50 border-l-4 border-emerald-500 p-6 mb-8 rounded-2xl shadow-sm animate-slide-down">
@@ -26,13 +43,21 @@
                         <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mr-4">
                             <i class="fas fa-clock text-amber-600 text-2xl"></i>
                         </div>
-                        <div>
+                        <div class="flex-1">
                             <p class="font-black text-amber-900 text-lg">Menunggu Pembayaran</p>
                             <p class="text-sm text-amber-700 font-medium">Batas waktu pembayaran:
                                 <span class="font-black underline">{{ $order->expires_at->format('d M Y, H:i') }} WIB</span>
                             </p>
                         </div>
-                        <div class="ml-auto">
+                        <div class="ml-auto flex items-center gap-3">
+                            <form action="{{ route('orders.cancel', $order->order_token) }}" method="POST"
+                                onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')">
+                                @csrf
+                                <button type="submit"
+                                    class="text-slate-400 hover:text-red-500 text-xs font-bold transition-colors">
+                                    Batalkan Pesanan
+                                </button>
+                            </form>
                             <a href="{{ route('payment.initiate', $order->order_token) }}"
                                 class="bg-brand-yellow hover:bg-yellow-400 text-black font-black py-2 px-6 rounded-xl transition shadow-md text-sm">
                                 Bayar Sekarang
@@ -40,15 +65,19 @@
                         </div>
                     </div>
                 </div>
-            @elseif($order->isExpired())
+            @elseif($order->isExpired() || $order->payment_status === 'canceled')
                 <div class="bg-slate-200 border-l-4 border-slate-500 p-6 mb-8 rounded-2xl shadow-sm animate-slide-down">
                     <div class="flex items-center">
                         <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mr-4">
                             <i class="fas fa-ban text-slate-500 text-2xl"></i>
                         </div>
                         <div>
-                            <p class="font-black text-slate-700 text-lg">Pesanan Kadaluarsa</p>
-                            <p class="text-sm text-slate-500">Maaf, waktu pembayaran untuk pesanan ini telah habis.</p>
+                            <p class="font-black text-slate-700 text-lg">
+                                {{ $order->payment_status === 'canceled' ? 'Pesanan Dibatalkan' : 'Pesanan Kadaluarsa' }}
+                            </p>
+                            <p class="text-sm text-slate-500">
+                                {{ $order->payment_status === 'canceled' ? 'Pesanan ini telah dibatalkan oleh Anda.' : 'Maaf, waktu pembayaran untuk pesanan ini telah habis.' }}
+                            </p>
                         </div>
                     </div>
                 </div>

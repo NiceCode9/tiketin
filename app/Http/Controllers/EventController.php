@@ -19,9 +19,17 @@ class EventController extends Controller
             ->take(8)
             ->get();
 
+        // Featured events (spotlight)
+        $featuredEvents = Event::where('status', 'published')
+            ->where('event_date', '>=', now())
+            ->with(['venue', 'ticketCategories', 'eventCategory'])
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get();
+
         $categories = \App\Models\EventCategory::all();
 
-        return view('home', compact('upcomingEvents', 'categories'));
+        return view('home', compact('upcomingEvents', 'featuredEvents', 'categories'));
     }
 
     /**

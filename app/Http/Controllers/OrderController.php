@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Services\OrderService;
 use App\Services\PromoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
@@ -121,6 +122,7 @@ class OrderController extends Controller
                 if ($request->expectsJson()) {
                     return response()->json(['valid' => false, 'message' => $result['message']]);
                 }
+
                 return back()->with('error', $result['message']);
             }
 
@@ -143,6 +145,7 @@ class OrderController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['valid' => false, 'message' => $e->getMessage()]);
             }
+
             return back()->with('error', $e->getMessage());
         }
     }
@@ -154,6 +157,49 @@ class OrderController extends Controller
             ->firstOrFail();
 
         return view('orders.show', compact('order'));
+    }
+
+    /**
+     * Cancel an order manually
+     */
+    public function cancel(string $orderToken)
+    {
+        $order = Order::where('order_token', $orderToken)
+            ->where('payment_status', 'pending')
+            ->firstOrFail();
+
+        try {
+            DB::transaction(function () use ($order) {
+                // Release reserved seats
+                foreach ($order->orderItems as $item) {
+                    if ($item->seat_id) {
+                        \App\Models\Seat::where('id', $item->seat_id)
+                            ->update(['status' => 'available']);
+                    }
+                    // Decrement sold count
+                    $item->ticketCategory->decrement('sold_count', $item->quantity);
+                }
+
+                $order->update(['payment_status' => 'canceled']);
+            });
+
+            return redirect()->route('orders.show', $orderToken)->with('success', 'Order cancelled successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to cancel order: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Get payment status for polling
+     */
+    public function status(string $orderToken)
+    {
+        $order = Order::where('order_token', $orderToken)->firstOrFail();
+
+        return response()->json([
+            'status' => $order->payment_status,
+            'is_paid' => $order->isPaid(),
+        ]);
     }
 
     /**

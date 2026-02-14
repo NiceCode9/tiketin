@@ -16,6 +16,8 @@ Route::get('/events/{slug}/order', [OrderController::class, 'create'])->name('or
 Route::post('/events/{slug}/order', [OrderController::class, 'store'])->name('orders.store');
 Route::get('/orders/{orderToken}/checkout', [OrderController::class, 'checkout'])->name('orders.checkout');
 Route::post('/orders/{orderToken}/promo', [OrderController::class, 'applyPromo'])->name('orders.applyPromo');
+Route::post('/orders/{orderToken}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+Route::get('/orders/{orderToken}/status', [OrderController::class, 'status'])->name('orders.status');
 Route::get('/orders/{orderToken}', [OrderController::class, 'show'])->name('orders.show');
 Route::get('/orders/{orderToken}/invoice', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
 
