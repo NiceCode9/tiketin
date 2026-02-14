@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Log;
 
 class ValidateWebhookSignature
 {
@@ -19,6 +20,7 @@ class ValidateWebhookSignature
 
         // Verify required fields exist
         if (!isset($payload['order_id'], $payload['status_code'], $payload['gross_amount'], $payload['signature_key'])) {
+            Log::warning('Midtrans Webhook: Missing required fields in payload', ['payload' => $payload]);
             abort(400, 'Invalid webhook payload');
         }
 
@@ -31,6 +33,11 @@ class ValidateWebhookSignature
         $signatureKey = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
 
         if ($signatureKey !== $payload['signature_key']) {
+            Log::error('Midtrans Webhook: Invalid Signature', [
+                'order_id' => $orderId,
+                'expected' => $signatureKey,
+                'received' => $payload['signature_key']
+            ]);
             abort(403, 'Invalid signature');
         }
 
