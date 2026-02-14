@@ -35,7 +35,10 @@ class OrderService
 
             // Create order items
             foreach ($data['items'] as $item) {
-                $ticketCategory = TicketCategory::findOrFail($item['ticket_category_id']);
+                // Use lockForUpdate to prevent race conditions
+                $ticketCategory = TicketCategory::where('id', $item['ticket_category_id'])
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
                 // Check availability
                 if (! $ticketCategory->hasAvailableTickets($item['quantity'])) {
@@ -45,7 +48,10 @@ class OrderService
                 // Handle seat assignment if seated
                 $seatId = null;
                 if ($ticketCategory->is_seated && isset($item['seat_id'])) {
-                    $seat = Seat::findOrFail($item['seat_id']);
+                    // Use lockForUpdate to prevent double booking
+                    $seat = Seat::where('id', $item['seat_id'])
+                        ->lockForUpdate()
+                        ->firstOrFail();
 
                     // Verify seat is available
                     if ($seat->status !== 'available') {

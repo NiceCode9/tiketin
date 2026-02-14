@@ -19,19 +19,21 @@ class CancelExpiredOrders extends Command
      *
      * @var string
      */
-    protected $description = 'Cancel expired pending orders and release seats/quota';
+    protected $description = 'Cancel pending orders that have exceeded their expiration time';
 
     /**
      * Execute the console command.
      */
-    public function handle(OrderService $orderService): int
+    public function handle(OrderService $orderService)
     {
-        $this->info('Cancelling expired orders...');
+        $this->info('Checking for expired orders...');
 
         $count = $orderService->cancelExpiredOrders();
 
-        $this->info("Cancelled {$count} expired orders");
-
-        return Command::SUCCESS;
+        if ($count > 0) {
+            $this->info("Successfully cancelled {$count} expired orders.");
+        } else {
+            $this->info('No expired orders found.');
+        }
     }
 }

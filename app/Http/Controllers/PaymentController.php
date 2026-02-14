@@ -42,13 +42,29 @@ class PaymentController extends Controller
     /**
      * Handle Midtrans callback
      */
+    /**
+     * Handle Midtrans callback
+     */
     public function callback(Request $request)
     {
         try {
-            $this->paymentService->handleCallback($request->all());
+            $payload = $request->all();
 
-            return response()->json(['status' => 'success']);
+            $log = \App\Models\WebhookLog::create([
+                'transaction_id' => $payload['transaction_id'] ?? null,
+                'order_id' => $payload['order_id'] ?? null,
+                'type' => $payload['payment_type'] ?? null,
+                'payload' => $payload,
+                'status' => 'pending',
+            ]);
+
+            // Dispatch job for asynchronous processing
+            \App\Jobs\ProcessMidtransWebhook::dispatch($log);
+
+            return response()->json(['status' => 'success', 'message' => 'Webhook received and queued']);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Webhook Error: '.$e->getMessage());
+
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),

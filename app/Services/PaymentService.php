@@ -58,36 +58,51 @@ class PaymentService
     /**
      * Handle payment notification callback from Midtrans
      */
+    /**
+     * Handle payment notification callback from Midtrans
+     */
     public function handleCallback(?array $payload = null): void
     {
-        // $payload is handled automatically by Midtrans\Notification if not passed,
-        // but we can pass it if we retrieved it from Request
+        if ($payload) {
+            // Manual processing from payload (for background jobs)
+            $transaction = $payload['transaction_status'] ?? null;
+            $type = $payload['payment_type'] ?? null;
+            $orderId = $payload['order_id'] ?? null;
+            $fraud = $payload['fraud_status'] ?? null;
+            $rawResponse = $payload;
+            $grossAmount = $payload['gross_amount'] ?? 0;
+            $transactionId = $payload['transaction_id'] ?? null;
+        } else {
+            // Automatic processing from php://input (for direct controller calls)
+            try {
+                $notif = new Notification;
+            } catch (\Exception $e) {
+                throw new \Exception('Invalid Midtrans Notification');
+            }
 
-        try {
-            $notif = new Notification;
-        } catch (\Exception $e) {
-            throw new \Exception('Invalid Midtrans Notification');
+            $transaction = $notif->transaction_status;
+            $type = $notif->payment_type;
+            $orderId = $notif->order_id;
+            $fraud = $notif->fraud_status;
+            $rawResponse = (array) $notif->getResponse();
+            $grossAmount = $notif->gross_amount;
+            $transactionId = $notif->transaction_id;
         }
-
-        $transaction = $notif->transaction_status;
-        $type = $notif->payment_type;
-        $orderId = $notif->order_id;
-        $fraud = $notif->fraud_status;
 
         $order = Order::where('order_number', $orderId)->firstOrFail();
 
-        DB::transaction(function () use ($order, $notif, $transaction, $type, $fraud) {
+        DB::transaction(function () use ($order, $transaction, $type, $fraud, $rawResponse, $grossAmount, $transactionId) {
             // Create or update payment transaction
             PaymentTransaction::updateOrCreate(
                 [
                     'order_id' => $order->id,
-                    'transaction_id' => $notif->transaction_id,
+                    'transaction_id' => $transactionId,
                 ],
                 [
                     'payment_type' => $type,
-                    'gross_amount' => $notif->gross_amount,
+                    'gross_amount' => $grossAmount,
                     'status' => $transaction,
-                    'raw_response' => (array) $notif->getResponse(),
+                    'raw_response' => $rawResponse,
                 ]
             );
 
@@ -96,10 +111,10 @@ class PaymentService
                     // TODO: Set payment status in merchant's database to 'challenge'
                     // For now we don't handle challenge automatically
                 } elseif ($fraud == 'accept') {
-                    $this->processSuccessfulPayment($order, (array) $notif->getResponse());
+                    $this->processSuccessfulPayment($order, $rawResponse);
                 }
             } elseif ($transaction == 'settlement') {
-                $this->processSuccessfulPayment($order, (array) $notif->getResponse());
+                $this->processSuccessfulPayment($order, $rawResponse);
             } elseif ($transaction == 'pending') {
                 $order->update(['payment_status' => 'pending']);
             } elseif ($transaction == 'deny') {

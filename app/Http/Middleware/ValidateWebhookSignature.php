@@ -18,7 +18,7 @@ class ValidateWebhookSignature
         $payload = $request->all();
 
         // Verify required fields exist
-        if (!isset($payload['order_id'], $payload['status_code'], $payload['gross_amount'], $payload['signature_key'])) {
+        if (! isset($payload['order_id'], $payload['status_code'], $payload['gross_amount'], $payload['signature_key'])) {
             abort(400, 'Invalid webhook payload');
         }
 
@@ -28,7 +28,7 @@ class ValidateWebhookSignature
         $statusCode = $payload['status_code'];
         $grossAmount = $payload['gross_amount'];
 
-        $signatureKey = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
+        $signatureKey = hash('sha512', $orderId.$statusCode.$grossAmount.$serverKey);
 
         if ($signatureKey !== $payload['signature_key']) {
             abort(403, 'Invalid signature');
