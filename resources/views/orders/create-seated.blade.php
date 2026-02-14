@@ -2,6 +2,52 @@
 
 @section('title', 'Select Seats - ' . $event->name)
 
+@push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container--default .select2-selection--single {
+            height: 38px !important;
+            padding: 4px 8px !important;
+            border-radius: 0.5rem !important;
+            border-color: #d1d5db !important;
+            background-color: white !important;
+            display: flex !important;
+            align-items: center !important;
+            transition: all 0.2s;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #1f2937 !important;
+            font-size: 0.875rem !important;
+            padding-left: 0 !important;
+            line-height: normal !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+            top: 1px !important;
+            right: 4px !important;
+        }
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #4f46e5 !important;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important;
+            outline: none !important;
+        }
+        .select2-dropdown {
+            border-color: #e5e7eb !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+            overflow: hidden !important;
+            z-index: 9999 !important;
+        }
+        .select2-search__field {
+            border-radius: 0.375rem !important;
+            padding: 6px 10px !important;
+        }
+        .select2-results__option--highlighted[aria-selected] {
+            background-color: #4f46e5 !important;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="py-12 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -284,6 +330,16 @@
                                         <label class="block text-xs font-semibold text-gray-700 mb-1">Email *</label>
                                         <input type="email" name="consumer_email" required class="input text-sm">
                                     </div>
+                                    <div x-ignore>
+                                        <label class="block text-xs font-semibold text-gray-700 mb-1">Kota Domisili *</label>
+                                        <select name="consumer_city" id="consumer_city" required class="select2-select text-sm">
+                                            {{-- AJAX Populated --}}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-700 mb-1">Tanggal Lahir *</label>
+                                        <input type="date" name="consumer_birth_date" required class="input text-sm">
+                                    </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-gray-700 mb-1">WhatsApp *</label>
                                         <input type="text" name="consumer_whatsapp" required
@@ -358,7 +414,40 @@
 @endsection
 
 @push('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        $(document).ready(function() {
+            $('#consumer_city').select2({
+                ajax: {
+                    url: '{{ route('events.cities') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term,
+                            page: params.page
+                        };
+                    },
+                    processResults: function(data, params) {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.results,
+                            pagination: {
+                                more: data.pagination.more
+                            }
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: 'Cari Kota...',
+                minimumInputLength: 0,
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('body')
+            });
+        });
+
         function seatSelection(config) {
             return {
                 selectedSeats: [],

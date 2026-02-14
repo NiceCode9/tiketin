@@ -19,6 +19,8 @@ class Order extends Model
         'order_token',
         'event_id',
         'consumer_name',
+        'consumer_city',
+        'consumer_birth_date',
         'consumer_email',
         'consumer_whatsapp',
         'consumer_identity_type',

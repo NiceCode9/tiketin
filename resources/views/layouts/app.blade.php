@@ -10,6 +10,8 @@
     <title>{{ config('app.name', 'Untix') }} - @yield('title', 'E-Ticketing Platform')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <link rel="icon" href="{{ asset('logo.png') }}">
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -34,7 +36,7 @@
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
                 <a href="{{ route('home') }}" class="flex-shrink-0 flex items-center">
-                    <img src="{{ asset('logo.png') }}" alt="Untix Logo" class="h-10 w-auto">
+                    <img src="{{ asset('logo-v2.png') }}" alt="Untix Logo" class="h-10 w-auto">
                 </a>
 
                 <!-- Desktop Menu -->
@@ -47,15 +49,15 @@
                         class="px-4 py-2 rounded-full font-medium transition {{ request()->routeIs('events.*') ? 'bg-brand-yellow text-black' : 'text-white hover:text-brand-yellow' }}">
                         Jelajah
                     </a>
-                    {{-- <a href="{{ route('tracking.index') }}"
-                        class="px-4 py-2 rounded-full {{ request()->routeIs('tracking.*') ? 'bg-brand-yellow text-black' : 'text-white hover:text-brand-yellow' }} font-medium transition">
+                    <a href="{{ route('tracking.index') }}"
+                        class="px-4 py-2 rounded-full font-medium transition {{ request()->routeIs('tracking.*') ? 'bg-brand-yellow text-black' : 'text-white hover:text-brand-yellow' }}">
                         Tracking Pesanan
                     </a>
                     <a href="{{ route('about') }}"
-                        class="px-4 py-2 rounded-full {{ request()->routeIs('about') ? 'bg-brand-yellow text-black' : 'text-white hover:text-brand-yellow' }} font-medium transition">
-                        Tentang
-                    </a> --}}
-                    <a href="#"
+                        class="px-4 py-2 rounded-full font-medium transition {{ request()->routeIs('about') ? 'bg-brand-yellow text-black' : 'text-white hover:text-brand-yellow' }}">
+                        Tentang Kami
+                    </a>
+                    <a href="/about#kontak"
                         class="px-4 py-2 rounded-full text-white hover:text-brand-yellow font-medium transition">
                         Hubungi Kami
                     </a>
@@ -63,14 +65,14 @@
 
                 <!-- Auth Buttons -->
                 <div class="hidden md:flex items-center space-x-4">
-                    <button class="text-white hover:text-brand-yellow transition">
+                    {{-- <button class="text-white hover:text-brand-yellow transition">
                         <i class="fas fa-search text-lg"></i>
                     </button>
                     <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-700 text-white">
                         <i class="fas fa-globe"></i>
                         <span class="text-sm font-medium">ID</span>
-                    </div>
-                    @auth
+                    </div> --}}
+                    {{-- @auth
                         <div class="flex items-center space-x-3">
                             <span class="text-white text-sm">{{ Auth::user()->name }}</span>
                             <form method="POST" action="{{ route('filament.admin.auth.logout') }}" class="inline">
@@ -86,7 +88,7 @@
                             class="bg-brand-yellow hover:bg-yellow-400 text-black font-bold py-2 px-6 rounded-lg transition transform hover:scale-105">
                             Masuk
                         </a>
-                    @endauth
+                    @endauth --}}
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -109,18 +111,18 @@
                     class="block px-3 py-2 text-base font-medium rounded-lg {{ request()->routeIs('events.*') ? 'bg-brand-yellow text-black' : 'text-white hover:bg-gray-700' }}">
                     Jelajah
                 </a>
-                {{-- <a href="{{ route('tracking.index') }}"
+                <a href="{{ route('tracking.index') }}"
                     class="block px-3 py-2 text-base font-medium text-white hover:bg-gray-700 rounded-lg">
                     Tracking
                 </a>
                 <a href="{{ route('about') }}"
                     class="block px-3 py-2 text-base font-medium text-white hover:bg-gray-700 rounded-lg">
                     Tentang Kami
-                </a> --}}
-                <a href="#" class="block px-3 py-2 text-base font-medium text-white hover:bg-gray-700 rounded-lg">
+                </a>
+                <a href="/about#kontak" class="block px-3 py-2 text-base font-medium text-white hover:bg-gray-700 rounded-lg">
                     Hubungi Kami
                 </a>
-                @auth
+                {{-- @auth
                     <div class="border-t border-gray-700 pt-2 mt-2">
                         <span class="block px-3 py-2 text-sm text-gray-300">{{ Auth::user()->name }}</span>
                         <form method="POST" action="{{ route('filament.admin.auth.logout') }}">
@@ -136,7 +138,7 @@
                         class="block px-3 py-2 text-base font-medium bg-brand-yellow text-black hover:bg-yellow-400 rounded-lg mt-2">
                         Masuk
                     </a>
-                @endauth
+                @endauth --}}
             </div>
         </div>
     </nav>

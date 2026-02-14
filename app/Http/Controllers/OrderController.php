@@ -31,11 +31,14 @@ class OrderController extends Controller
         // Check if event has seated tickets
         $hasSeatedTickets = $event->ticketCategories->where('is_seated', true)->count() > 0;
 
+        // Fetch all cities for the dropdown
+        $cities = \App\Models\City::orderBy('name')->get();
+
         if ($hasSeatedTickets) {
-            return view('orders.create-seated', compact('event'));
+            return view('orders.create-seated', compact('event', 'cities'));
         }
 
-        return view('orders.create', compact('event'));
+        return view('orders.create', compact('event', 'cities'));
     }
 
     /**
@@ -48,6 +51,8 @@ class OrderController extends Controller
         $validator = Validator::make($request->all(), [
             'consumer_name' => 'required|string|max:255',
             'consumer_email' => 'required|email|max:255',
+            'consumer_city' => 'required|string|max:255',
+            'consumer_birth_date' => 'required|date',
             'consumer_whatsapp' => 'required|string|max:255',
             'consumer_identity_type' => 'required|in:KTP,SIM,Student Card,Passport',
             'consumer_identity_number' => 'required|string|max:255',
@@ -66,6 +71,8 @@ class OrderController extends Controller
                 'event_id' => $event->id,
                 'consumer_name' => $request->consumer_name,
                 'consumer_email' => $request->consumer_email,
+                'consumer_city' => $request->consumer_city,
+                'consumer_birth_date' => $request->consumer_birth_date,
                 'consumer_whatsapp' => $request->consumer_whatsapp,
                 'consumer_identity_type' => $request->consumer_identity_type,
                 'consumer_identity_number' => $request->consumer_identity_number,

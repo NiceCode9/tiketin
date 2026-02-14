@@ -2,6 +2,52 @@
 
 @section('title', 'Select Tickets - ' . $event->name)
 
+@push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container--default .select2-selection--single {
+            height: 46px !important;
+            padding: 8px 12px !important;
+            border-radius: 0.5rem !important;
+            border-color: #d1d5db !important;
+            background-color: white !important;
+            display: flex !important;
+            align-items: center !important;
+            transition: all 0.2s;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #1f2937 !important;
+            font-size: 0.875rem !important;
+            padding-left: 4px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 44px !important;
+            top: 1px !important;
+            right: 8px !important;
+        }
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #4f46e5 !important;
+            ring: 2px !important;
+            outline: none !important;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important;
+        }
+        .select2-dropdown {
+            border-color: #e5e7eb !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+            overflow: hidden !important;
+            z-index: 9999 !important;
+        }
+        .select2-search__field {
+            border-radius: 0.375rem !important;
+            padding: 8px 12px !important;
+        }
+        .select2-results__option--highlighted[aria-selected] {
+            background-color: #4f46e5 !important;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="py-12 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -165,6 +211,36 @@
                                         @enderror
                                     </div>
 
+                                    <div x-ignore>
+                                        <label for="consumer_city" class="block text-sm font-semibold text-gray-700 mb-2">
+                                            Kota Domisili <span class="text-red-500">*</span>
+                                        </label>
+                                        <select name="consumer_city" id="consumer_city" required
+                                            class="select2-select @error('consumer_city') input-error @enderror">
+                                            {{-- <option value="">Pilih Kota</option>
+                                            @foreach($cities as $city)
+                                                <option value="{{ $city->name }}" {{ old('consumer_city') == $city->name ? 'selected' : '' }}>
+                                                    {{ $city->name }}
+                                                </option>
+                                            @endforeach --}}
+                                        </select>
+                                        @error('consumer_city')
+                                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    <div>
+                                        <label for="consumer_birth_date" class="block text-sm font-semibold text-gray-700 mb-2">
+                                            Tanggal Lahir <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="date" name="consumer_birth_date" id="consumer_birth_date" required
+                                            class="input @error('consumer_birth_date') input-error @enderror"
+                                            value="{{ old('consumer_birth_date') }}">
+                                        @error('consumer_birth_date')
+                                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
                                     <div>
                                         <label for="consumer_whatsapp"
                                             class="block text-sm font-semibold text-gray-700 mb-2">
@@ -290,7 +366,39 @@
 @endsection
 
 @push('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        $(document).ready(function() {
+            $('#consumer_city').select2({
+                ajax: {
+                    url: '{{ route('events.cities') }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page
+                        };
+                    },
+                    processResults: function(data, params) {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.results,
+                            pagination: {
+                                more: data.pagination.more
+                            }
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: 'Cari Kota...',
+                minimumInputLength: 0,
+                allowClear: true,
+                width: '100%'
+            });
+        });
+
         function ticketSelection(config) {
             return {
                 categories: config.categories,

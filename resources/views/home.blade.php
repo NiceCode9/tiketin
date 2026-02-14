@@ -56,8 +56,11 @@
 @section('content')
     <!-- Hero Spotlight Section -->
     <section class="relative bg-slate-900 pt-32 pb-20 overflow-hidden" x-data="{ activeSlide: 0, slidesCount: {{ $featuredEvents->count() }} }">
-        {{-- Background Decorations --}}
+        {{-- Background Image --}}
         <div class="absolute inset-0 z-0">
+            <img src="{{ asset('bg-landing.jpg') }}" class="w-full h-full object-cover opacity-50" alt="Background">
+            <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900/40 to-transparent"></div>
+            {{-- Secondary Glows --}}
             <div class="absolute top-0 right-0 w-1/3 h-full bg-brand-primary/20 blur-[120px] rounded-full"></div>
             <div class="absolute bottom-0 left-0 w-1/4 h-2/3 bg-brand-secondary/10 blur-[100px] rounded-full"></div>
         </div>
@@ -66,23 +69,24 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 {{-- Left Content: Headline & Search --}}
                 <div class="lg:col-span-5 space-y-8">
-                    <div
+                    {{-- <div
                         class="inline-flex items-center gap-2 py-2 px-4 rounded-full bg-white/5 border border-white/10 text-brand-yellow text-xs font-black tracking-widest uppercase animate-fade-in">
                         <span class="w-2 h-2 rounded-full bg-brand-yellow animate-ping"></span>
                         Platform Tiket Terbesar
-                    </div>
+                    </div> --}}
 
                     <h1 class="text-5xl md:text-7xl font-black text-white leading-[1.1] animate-slide-up">
-                        Pengalaman <br>
+                        Platform <br>
                         <span
                             class="text-transparent bg-clip-text bg-gradient-to-r from-brand-yellow to-yellow-200">Terbaik</span>
                         <br>
-                        Mulai Dari Sini
+                        Dalam Segala Jenis Event
                     </h1>
 
                     <p class="text-gray-400 text-lg md:text-xl max-w-md leading-relaxed animate-slide-up"
                         style="animation-delay: 0.1s">
-                        Temukan ribuan konser, workshop, dan festival seru. Booking tiketmu dengan mudah, aman, dan instan.
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-yellow to-yellow-200">Smarter
+                            Ticketing.</span> Smarter Event.
                     </p>
 
                     {{-- Dynamic Search Bar --}}
@@ -198,7 +202,7 @@
     </section>
 
     {{-- Trust Stats --}}
-    <section class="py-16 border-y border-gray-100 bg-gray-50/50">
+    {{-- <section class="py-16 border-y border-gray-100 bg-gray-50/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
                 <div class="text-center space-y-2">
@@ -219,7 +223,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> --}}
 
     {{-- Trending & Upcoming Events --}}
     <section class="py-24 bg-gray-50 relative">

@@ -60,56 +60,88 @@ class PaymentService
      */
     public function handleCallback(?array $payload = null): void
     {
-        // $payload is handled automatically by Midtrans\Notification if not passed,
-        // but we can pass it if we retrieved it from Request
-
         try {
             $notif = new Notification;
-        } catch (\Exception $e) {
-            throw new \Exception('Invalid Midtrans Notification');
-        }
+            $data = (array) $notif->getResponse();
 
-        $transaction = $notif->transaction_status;
-        $type = $notif->payment_type;
-        $orderId = $notif->order_id;
-        $fraud = $notif->fraud_status;
+            // 1. Manual Signature Verification (Security Recommendation)
+            $serverKey = config('midtrans.server_key');
+            $orderId = $notif->order_id;
+            $statusCode = $notif->status_code;
+            $grossAmount = $notif->gross_amount;
+            
+            $input = $orderId . $statusCode . $grossAmount . $serverKey;
+            $signature = hash('sha512', $input);
 
-        $order = Order::where('order_number', $orderId)->firstOrFail();
-
-        DB::transaction(function () use ($order, $notif, $transaction, $type, $fraud) {
-            // Create or update payment transaction
-            PaymentTransaction::updateOrCreate(
-                [
-                    'order_id' => $order->id,
-                    'transaction_id' => $notif->transaction_id,
-                ],
-                [
-                    'payment_type' => $type,
-                    'gross_amount' => $notif->gross_amount,
-                    'status' => $transaction,
-                    'raw_response' => (array) $notif->getResponse(),
-                ]
-            );
-
-            if ($transaction == 'capture') {
-                if ($fraud == 'challenge') {
-                    // TODO: Set payment status in merchant's database to 'challenge'
-                    // For now we don't handle challenge automatically
-                } elseif ($fraud == 'accept') {
-                    $this->processSuccessfulPayment($order, (array) $notif->getResponse());
-                }
-            } elseif ($transaction == 'settlement') {
-                $this->processSuccessfulPayment($order, (array) $notif->getResponse());
-            } elseif ($transaction == 'pending') {
-                $order->update(['payment_status' => 'pending']);
-            } elseif ($transaction == 'deny') {
-                $this->processFailedPayment($order, 'failed');
-            } elseif ($transaction == 'expire') {
-                $this->processFailedPayment($order, 'expired');
-            } elseif ($transaction == 'cancel') {
-                $this->processFailedPayment($order, 'canceled');
+            if ($signature !== $notif->signature_key) {
+                \Illuminate\Support\Facades\Log::warning('Midtrans: Invalid Signature Detected', [
+                    'order_id' => $orderId,
+                    'status_code' => $statusCode,
+                    'gross_amount' => $grossAmount,
+                ]);
+                throw new \Exception('Invalid Midtrans Signature');
             }
-        });
+
+            // 2. Logging for Debugging/Auditing
+            \Illuminate\Support\Facades\Log::info('Midtrans: Processing Notification', [
+                'order_id' => $orderId,
+                'status' => $notif->transaction_status,
+                'payment_type' => $notif->payment_type,
+            ]);
+
+            $transaction = $notif->transaction_status;
+            $type = $notif->payment_type;
+            $fraud = $notif->fraud_status;
+
+            $order = Order::where('order_number', $orderId)->first();
+
+            if (!$order) {
+                \Illuminate\Support\Facades\Log::error('Midtrans: Order Not Found', ['order_id' => $orderId]);
+                return;
+            }
+
+            DB::transaction(function () use ($order, $notif, $transaction, $type, $fraud, $data) {
+                // Create or update payment transaction record
+                PaymentTransaction::updateOrCreate(
+                    [
+                        'order_id' => $order->id,
+                        'transaction_id' => $notif->transaction_id,
+                    ],
+                    [
+                        'payment_type' => $type,
+                        'gross_amount' => $notif->gross_amount,
+                        'status' => $transaction,
+                        'raw_response' => $data,
+                    ]
+                );
+
+                // 3. Status Mapping logic
+                if ($transaction == 'capture') {
+                    if ($fraud == 'challenge') {
+                        $order->update(['payment_status' => 'challenge']);
+                    } elseif ($fraud == 'accept') {
+                        $this->processSuccessfulPayment($order, $data);
+                    }
+                } elseif ($transaction == 'settlement') {
+                    $this->processSuccessfulPayment($order, $data);
+                } elseif ($transaction == 'pending') {
+                    $order->update(['payment_status' => 'pending']);
+                } elseif ($transaction == 'deny') {
+                    $this->processFailedPayment($order, 'failed');
+                } elseif ($transaction == 'expire') {
+                    $this->processFailedPayment($order, 'expired');
+                } elseif ($transaction == 'cancel') {
+                    $this->processFailedPayment($order, 'canceled');
+                }
+            });
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Midtrans: Callback Processing Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     /**

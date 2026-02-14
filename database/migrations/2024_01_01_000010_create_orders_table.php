@@ -17,6 +17,8 @@ return new class extends Migration
             $table->uuid('order_token')->unique(); // For secure tracking
             $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
             $table->string('consumer_name');
+            $table->string('consumer_city');
+            $table->date('consumer_birth_date');
             $table->string('consumer_email');
             $table->string('consumer_whatsapp');
             $table->enum('consumer_identity_type', ['KTP', 'SIM', 'Student Card', 'Passport']);

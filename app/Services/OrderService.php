@@ -21,6 +21,8 @@ class OrderService
                 'event_id' => $data['event_id'],
                 'consumer_name' => $data['consumer_name'],
                 'consumer_email' => $data['consumer_email'],
+                'consumer_city' => $data['consumer_city'],
+                'consumer_birth_date' => $data['consumer_birth_date'],
                 'consumer_whatsapp' => $data['consumer_whatsapp'],
                 'consumer_identity_type' => $data['consumer_identity_type'],
                 'consumer_identity_number' => $data['consumer_identity_number'],

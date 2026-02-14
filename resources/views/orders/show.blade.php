@@ -374,11 +374,11 @@
                     Lihat Event Lain
                 </a>
                 @if ($order->isPaid())
-                    <button
+                    <a href="{{ route('orders.invoice', $order->order_token) }}"
                         class="flex-1 max-w-xs group bg-white border-2 border-slate-200 hover:border-emerald-500 text-slate-900 font-black py-4 px-8 rounded-2xl transition shadow-lg text-center flex items-center justify-center gap-3">
                         <i class="fas fa-file-pdf text-red-500 group-hover:scale-110 transition"></i>
                         Download PDF
-                    </button>
+                    </a>
                 @endif
             </div>
 

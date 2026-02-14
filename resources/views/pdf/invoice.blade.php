@@ -202,7 +202,9 @@
             <table class="header-top">
                 <tr>
                     <td>
-                        <div class="brand">TIKETIN</div>
+                        <div class="brand">
+                            <img src="{{ public_path('logo-v2.png') }}" style="height: 40px; width: auto;">
+                        </div>
                         <div style="font-size: 10px; color: #666;">by Unovia Creative</div>
                     </td>
                     <td class="invoice-title">INVOICE</td>

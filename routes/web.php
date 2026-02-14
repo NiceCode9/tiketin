@@ -11,6 +11,17 @@ Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/cities', [EventController::class, 'getCities'])->name('events.cities');
 Route::get('/events/{event:slug}', [EventController::class, 'show'])->name('events.show');
 
+// about
+Route::get('/about', function () {
+    return view('about');
+})->name('about');
+
+// Tracking
+Route::get('/tracking', [\App\Http\Controllers\OrderTrackingController::class, 'index'])->name('tracking.index');
+Route::post('/tracking', [\App\Http\Controllers\OrderTrackingController::class, 'track'])->name('tracking.track');
+Route::get('/tracking/results', [\App\Http\Controllers\OrderTrackingController::class, 'results'])->name('tracking.results');
+Route::get('/tracking/{order_number}', [\App\Http\Controllers\OrderTrackingController::class, 'show'])->name('tracking.show');
+
 // Order creation and checkout
 Route::get('/events/{slug}/order', [OrderController::class, 'create'])->name('orders.create');
 Route::post('/events/{slug}/order', [OrderController::class, 'store'])->name('orders.store');
