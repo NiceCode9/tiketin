@@ -67,7 +67,7 @@ class PromoCode extends Model
     public function isValid(): bool
     {
         $now = now();
-        
+
         return $this->status === 'active'
             && $now->between($this->valid_from, $this->valid_until)
             && $this->used_count < $this->quota;
@@ -78,10 +78,10 @@ class PromoCode extends Model
      */
     public function meetsMinimumPurchase(float $amount): bool
     {
-        if (!$this->min_purchase_amount) {
+        if (! $this->min_purchase_amount) {
             return true;
         }
-        
+
         return $amount >= $this->min_purchase_amount;
     }
 
@@ -90,18 +90,17 @@ class PromoCode extends Model
      */
     public function calculateDiscount(float $subtotal): float
     {
+        // Percentage discount
+        $discount = $subtotal * ($this->discount_value / 100);
+
         if ($this->discount_type === 'fixed') {
             return min($this->discount_value, $subtotal);
         }
-        
-        // Percentage discount
-        $discount = $subtotal * ($this->discount_value / 100);
-        
         // Apply max discount cap if set
-        if ($this->max_discount_amount) {
-            $discount = min($discount, $this->max_discount_amount);
-        }
-        
+        // if ($this->max_discount_amount) {
+        //     $discount = min($discount, $this->max_discount_amount);
+        // }
+
         return round($discount, 2);
     }
 }

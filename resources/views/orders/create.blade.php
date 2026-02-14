@@ -15,7 +15,19 @@
                 <p class="text-gray-600">{{ $event->name }}</p>
             </div>
 
-            <form action="{{ route('orders.store', $event->slug) }}" method="POST" id="orderForm">
+            <form action="{{ route('orders.store', $event->slug) }}" method="POST" id="orderForm" x-data="ticketSelection({
+                categories: [
+                    @foreach ($event->ticketCategories as $category)
+                        {
+                            id: {{ $category->id }},
+                            name: '{{ $category->name }}',
+                            price: {{ $category->price }},
+                            available: {{ $category->available_count }},
+                            quantity: 0
+                        }, @endforeach
+                ]
+            })"
+                @submit="validateForm($event)">
                 @csrf
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -62,58 +74,59 @@
 
                                 <div class="space-y-4">
                                     @foreach ($event->ticketCategories as $category)
-                                        <div
-                                            class="border-2 border-gray-200 rounded-xl p-6 hover:border-brand-primary transition-all duration-300">
-                                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                                <div class="flex-1">
-                                                    <h4 class="text-xl font-bold text-slate-900 mb-1">{{ $category->name }}
-                                                    </h4>
-                                                    <p class="text-2xl font-bold text-brand-primary mb-2">
-                                                        Rp {{ number_format($category->price, 0, ',', '.') }}
-                                                    </p>
-                                                    <div class="flex items-center gap-2">
-                                                        @if ($category->hasAvailableTickets())
-                                                            <span class="badge-success text-xs">
-                                                                <i class="fas fa-check-circle mr-1"></i>
-                                                                {{ $category->available_count }} available
-                                                            </span>
-                                                        @else
-                                                            <span class="badge-danger text-xs">
-                                                                <i class="fas fa-times-circle mr-1"></i>
-                                                                Sold Out
-                                                            </span>
-                                                        @endif
-                                                    </div>
-                                                </div>
-
-                                                <div class="flex items-center gap-3">
-                                                    <button type="button"
-                                                        onclick="updateQuantity({{ $loop->index }}, -1)"
-                                                        class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        {{ !$category->hasAvailableTickets() ? 'disabled' : '' }}>
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-
-                                                    <span class="w-12 text-center text-2xl font-bold"
-                                                        id="qty-display-{{ $loop->index }}">0</span>
-
-                                                    <button type="button" onclick="updateQuantity({{ $loop->index }}, 1)"
-                                                        class="w-10 h-10 bg-brand-yellow hover:bg-yellow-400 rounded-lg flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        {{ !$category->hasAvailableTickets() ? 'disabled' : '' }}>
-                                                        <i class="fas fa-plus"></i>
-                                                    </button>
-
-                                                    <input type="hidden" name="items[{{ $loop->index }}][quantity]"
-                                                        id="qty-{{ $loop->index }}" value="0"
-                                                        data-max="{{ $category->available_count }}"
-                                                        data-price="{{ $category->price }}"
-                                                        data-name="{{ $category->name }}">
-                                                    <input type="hidden"
-                                                        name="items[{{ $loop->index }}][ticket_category_id]"
-                                                        value="{{ $category->id }}">
+                                        <div x-data="{ category: categories[{{ $loop->index }}] }"
+                                        class="border-2 border-gray-200 rounded-xl p-6 hover:border-brand-primary transition-all duration-300"
+                                        :class="category.quantity > 0 ? 'border-brand-primary bg-brand-primary/5' : ''">
+                                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                            <div class="flex-1">
+                                                <h4 class="text-xl font-bold text-slate-900 mb-1">{{ $category->name }}
+                                                </h4>
+                                                <p class="text-2xl font-bold text-brand-primary mb-2">
+                                                    Rp {{ number_format($category->price, 0, ',', '.') }}
+                                                </p>
+                                                <div class="flex items-center gap-2">
+                                                    @if ($category->hasAvailableTickets())
+                                                        <span class="badge-success text-xs">
+                                                            <i class="fas fa-check-circle mr-1"></i>
+                                                            {{ $category->available_count }} available
+                                                        </span>
+                                                    @else
+                                                        <span class="badge-danger text-xs">
+                                                            <i class="fas fa-times-circle mr-1"></i>
+                                                            Sold Out
+                                                        </span>
+                                                    @endif
                                                 </div>
                                             </div>
+
+                                            <div class="flex items-center gap-3">
+                                                <button type="button" @click="updateQuantity({{ $loop->index }}, -1)"
+                                                    class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    :disabled="!category.available || category.quantity <= 0">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+
+                                                <span class="w-12 text-center text-2xl font-bold"
+                                                    x-text="category.quantity">0</span>
+
+                                                <button type="button" @click="updateQuantity({{ $loop->index }}, 1)"
+                                                    class="w-10 h-10 bg-brand-yellow hover:bg-yellow-400 rounded-lg flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    :disabled="!category.available || category.quantity >= category.available">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+
+                                                <template x-if="category.quantity > 0">
+                                                    <div>
+                                                        <input type="hidden" :name="`items[${{{ $loop->index }}}][quantity]`"
+                                                            :value="category.quantity">
+                                                        <input type="hidden"
+                                                            :name="`items[${{{ $loop->index }}}][ticket_category_id]`"
+                                                            :value="category.id">
+                                                    </div>
+                                                </template>
+                                            </div>
                                         </div>
+                                    </div>
                                     @endforeach
                                 </div>
                             </div>
@@ -222,27 +235,46 @@
                                     Order Summary
                                 </h3>
 
-                                <div id="summary-items" class="space-y-3 mb-6 min-h-[100px]">
-                                    <p class="text-gray-500 text-sm text-center py-8">
-                                        <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-2 block"></i>
-                                        No tickets selected
-                                    </p>
+                                <div class="space-y-3 mb-6 min-h-[100px]">
+                                    <template x-if="totalTickets === 0">
+                                        <p class="text-gray-500 text-sm text-center py-8">
+                                            <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-2 block"></i>
+                                            No tickets selected
+                                        </p>
+                                    </template>
+                                    <template x-for="cat in categories" :key="cat.id">
+                                        <template x-if="cat.quantity > 0">
+                                            <div class="flex justify-between text-sm animate-slide-up">
+                                                <div>
+                                                    <p class="font-medium text-gray-900" x-text="cat.name"></p>
+                                                    <p class="text-xs text-gray-500">
+                                                        <span x-text="cat.quantity"></span> x Rp <span
+                                                            x-text="formatRupiah(cat.price)"></span>
+                                                    </p>
+                                                </div>
+                                                <p class="font-semibold text-gray-900">Rp <span
+                                                        x-text="formatRupiah(cat.quantity * cat.price)"></span></p>
+                                            </div>
+                                        </template>
+                                    </template>
                                 </div>
 
                                 <div class="border-t border-gray-200 pt-4 mb-6">
                                     <div class="flex justify-between text-sm mb-2">
                                         <span class="text-gray-600">Total Tickets</span>
-                                        <span class="font-semibold" id="total-tickets">0</span>
+                                        <span class="font-semibold" x-text="totalTickets">0</span>
                                     </div>
                                     <div class="flex justify-between text-xl font-bold">
                                         <span>Total</span>
-                                        <span class="text-brand-yellow" id="total-amount">Rp 0</span>
+                                        <span class="text-brand-yellow" x-text="`Rp ${formatRupiah(totalAmount)}`">Rp 0</span>
                                     </div>
                                 </div>
 
-                                <button type="submit" id="submit-btn" disabled
-                                    class="w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed transition">
-                                    <i class="fas fa-lock mr-2"></i> Continue to Checkout
+                                <button type="submit" :disabled="totalTickets === 0"
+                                    :class="totalTickets > 0 ? 'bg-brand-yellow hover:bg-yellow-400 text-black shadow-lg scale-105' : 'bg-gray-300 text-gray-500 cursor-not-allowed'"
+                                    class="w-full font-bold py-4 rounded-xl transition transform">
+                                    <i class="fas" :class="totalTickets > 0 ? 'fa-arrow-right' : 'fa-lock'" class="mr-2"></i>
+                                    <span x-text="totalTickets > 0 ? 'Continue to Checkout' : 'Continue to Checkout'"></span>
                                 </button>
 
                                 <p class="text-xs text-gray-500 text-center mt-4">
@@ -259,108 +291,39 @@
 
 @push('scripts')
     <script>
-        const quantities = [];
-        const prices = [];
-        const names = [];
-        const maxQuantities = [];
+        function ticketSelection(config) {
+            return {
+                categories: config.categories,
 
-        // Initialize data
-        @foreach ($event->ticketCategories as $category)
-            quantities[{{ $loop->index }}] = 0;
-            prices[{{ $loop->index }}] = {{ $category->price }};
-            names[{{ $loop->index }}] = "{{ $category->name }}";
-            maxQuantities[{{ $loop->index }}] = {{ $category->available_count }};
-        @endforeach
+                get totalTickets() {
+                    return this.categories.reduce((acc, cat) => acc + cat.quantity, 0);
+                },
 
-        function updateQuantity(index, change) {
-            const newQty = quantities[index] + change;
+                get totalAmount() {
+                    return this.categories.reduce((acc, cat) => acc + (cat.quantity * cat.price), 0);
+                },
 
-            if (newQty < 0 || newQty > maxQuantities[index]) {
-                return;
-            }
+                updateQuantity(index, change) {
+                    const cat = this.categories[index];
+                    const newQty = cat.quantity + change;
 
-            quantities[index] = newQty;
-            document.getElementById('qty-' + index).value = newQty;
-            document.getElementById('qty-display-' + index).textContent = newQty;
+                    if (newQty >= 0 && newQty <= cat.available) {
+                        cat.quantity = newQty;
+                    }
+                },
 
-            updateSummary();
-        }
+                formatRupiah(amount) {
+                    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                },
 
-        function updateSummary() {
-            let totalTickets = 0;
-            let totalAmount = 0;
-            let summaryHTML = '';
-
-            quantities.forEach((qty, index) => {
-                if (qty > 0) {
-                    totalTickets += qty;
-                    const subtotal = qty * prices[index];
-                    totalAmount += subtotal;
-
-                    summaryHTML += `
-                    <div class="flex justify-between text-sm">
-                        <div>
-                            <p class="font-medium text-gray-900">${names[index]}</p>
-                            <p class="text-xs text-gray-500">${qty} x Rp ${formatRupiah(prices[index])}</p>
-                        </div>
-                        <p class="font-semibold text-gray-900">Rp ${formatRupiah(subtotal)}</p>
-                    </div>
-                `;
+                validateForm(e) {
+                    if (this.totalTickets === 0) {
+                        e.preventDefault();
+                        alert('Please select at least one ticket');
+                        return false;
+                    }
                 }
-            });
-
-            if (summaryHTML === '') {
-                summaryHTML = `
-                <p class="text-gray-500 text-sm text-center py-8">
-                    <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-2 block"></i>
-                    No tickets selected
-                </p>
-            `;
-            }
-
-            document.getElementById('summary-items').innerHTML = summaryHTML;
-            document.getElementById('total-tickets').textContent = totalTickets;
-            document.getElementById('total-amount').textContent = 'Rp ' + formatRupiah(totalAmount);
-
-            // Enable/disable submit button
-            const submitBtn = document.getElementById('submit-btn');
-            if (totalTickets > 0) {
-                submitBtn.disabled = false;
-                submitBtn.className =
-                    'w-full bg-brand-yellow hover:bg-yellow-400 text-black font-bold py-4 rounded-xl transition transform hover:scale-105 shadow-lg';
-                submitBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i> Continue to Checkout';
-            } else {
-                submitBtn.disabled = true;
-                submitBtn.className =
-                    'w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed transition';
-                submitBtn.innerHTML = '<i class="fas fa-lock mr-2"></i> Continue to Checkout';
             }
         }
-
-        function formatRupiah(amount) {
-            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        }
-
-        // Form validation and cleanup
-        document.getElementById('orderForm').addEventListener('submit', function(e) {
-            const totalTickets = quantities.reduce((a, b) => a + b, 0);
-
-            if (totalTickets === 0) {
-                e.preventDefault();
-                alert('Please select at least one ticket');
-                return false;
-            }
-
-            // Remove items with quantity 0 before submitting
-            quantities.forEach((qty, index) => {
-                if (qty === 0) {
-                    const qtyInput = document.getElementById('qty-' + index);
-                    const categoryInput = document.querySelector(
-                        `input[name="items[${index}][ticket_category_id]"]`);
-                    if (qtyInput) qtyInput.remove();
-                    if (categoryInput) categoryInput.remove();
-                }
-            });
-        });
     </script>
 @endpush

@@ -15,7 +15,19 @@
                 <p class="text-gray-600">{{ $event->name }}</p>
             </div>
 
-            <form action="{{ route('orders.store', $event->slug) }}" method="POST" id="seatSelectionForm">
+            <form action="{{ route('orders.store', $event->slug) }}" method="POST" id="seatSelectionForm"
+                x-data="seatSelection({
+                    generalCategories: [
+                        @foreach ($event->ticketCategories->where('is_seated', false) as $category)
+                        {
+                            id: {{ $category->id }},
+                            name: '{{ $category->name }}',
+                            price: {{ $category->price }},
+                            available: {{ $category->available_count }},
+                            quantity: 0
+                        }, @endforeach
+                    ]
+                })" @submit="validateForm($event)">
                 @csrf
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -98,16 +110,10 @@
                                                     <div class="flex gap-2 flex-wrap justify-center">
                                                         @foreach ($rowSeats->sortBy('seat_number') as $seat)
                                                             <button type="button"
-                                                                class="seat-button w-12 h-12 rounded-lg text-sm font-bold transition-all duration-200 transform hover:scale-110
-                                                                    @if ($seat->status === 'available') bg-green-500 hover:bg-green-600 text-white shadow-md hover:shadow-lg
-                                                                    @elseif($seat->status === 'reserved')
-                                                                        bg-yellow-500 text-white cursor-not-allowed opacity-60
-                                                                    @else
-                                                                        bg-gray-400 text-white cursor-not-allowed opacity-50 @endif"
-                                                                data-seat-id="{{ $seat->id }}"
-                                                                data-seat-label="{{ $seat->full_seat }}"
-                                                                data-category-id="{{ $categories->first()->id }}"
-                                                                data-price="{{ $categories->first()->price }}"
+                                                                class="seat-button w-12 h-12 rounded-lg text-sm font-bold transition-all duration-200 transform hover:scale-110"
+                                                                :class="getSeatClass({{ $seat->id }},
+                                                                    '{{ $seat->status }}')"
+                                                                @click="toggleSeat({{ $seat->id }}, '{{ $seat->full_seat }}', {{ $categories->first()->id }}, {{ $categories->first()->price }})"
                                                                 @if ($seat->status !== 'available') disabled @endif>
                                                                 {{ $seat->seat_number }}
                                                             </button>
@@ -149,8 +155,10 @@
 
                                         <div class="space-y-4">
                                             @foreach ($event->ticketCategories->where('is_seated', false) as $category)
-                                                <div
-                                                    class="border-2 border-gray-200 rounded-xl p-6 hover:border-brand-primary transition-all duration-300">
+                                                <div x-data="{ category: generalTickets.find(c => c.id === {{ $category->id }}) }"
+                                                    class="border-2 border-gray-200 rounded-xl p-6 hover:border-brand-primary transition-all duration-300"
+                                                    :class="category.quantity > 0 ? 'border-brand-primary bg-brand-primary/5' :
+                                                        ''">
                                                     <div
                                                         class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                                         <div class="flex-1">
@@ -166,26 +174,21 @@
                                                         </div>
                                                         <div class="flex items-center gap-3">
                                                             <button type="button"
-                                                                onclick="updateGeneralQty('{{ $category->id }}', -1)"
-                                                                class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition">
+                                                                @click="updateGeneralQty({{ $category->id }}, -1)"
+                                                                class="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center transition disabled:opacity-50"
+                                                                :disabled="category.quantity <= 0">
                                                                 <i class="fas fa-minus"></i>
                                                             </button>
 
                                                             <span class="w-12 text-center text-2xl font-bold"
-                                                                id="general-qty-display-{{ $category->id }}">0</span>
+                                                                x-text="category.quantity">0</span>
 
                                                             <button type="button"
-                                                                onclick="updateGeneralQty('{{ $category->id }}', 1)"
-                                                                class="w-10 h-10 bg-brand-yellow hover:bg-yellow-400 rounded-lg flex items-center justify-center transition">
+                                                                @click="updateGeneralQty({{ $category->id }}, 1)"
+                                                                class="w-10 h-10 bg-brand-yellow hover:bg-yellow-400 rounded-lg flex items-center justify-center transition disabled:opacity-50"
+                                                                :disabled="category.quantity >= category.available">
                                                                 <i class="fas fa-plus"></i>
                                                             </button>
-
-                                                            <input type="hidden" id="general-qty-{{ $category->id }}"
-                                                                class="general-ticket-input"
-                                                                data-category-id="{{ $category->id }}"
-                                                                data-price="{{ $category->price }}"
-                                                                data-name="{{ $category->name }}"
-                                                                data-max="{{ $category->available_count }}" value="0">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -206,22 +209,64 @@
                                     Order Summary
                                 </h3>
 
-                                <div id="selectedSeatsList"
-                                    class="space-y-3 mb-6 min-h-[150px] max-h-[400px] overflow-y-auto">
-                                    <p class="text-gray-500 text-sm text-center py-8">
-                                        <i class="fas fa-chair text-4xl text-gray-300 mb-2 block"></i>
-                                        No seats selected
-                                    </p>
+                                <div class="space-y-3 mb-6 min-h-[150px] max-h-[400px] overflow-y-auto">
+                                    <template x-if="totalTickets === 0">
+                                        <p class="text-gray-500 text-sm text-center py-8">
+                                            <i class="fas fa-chair text-4xl text-gray-300 mb-2 block"></i>
+                                            No seats selected
+                                        </p>
+                                    </template>
+
+                                    {{-- Seated Summary --}}
+                                    <template x-if="selectedSeats.length > 0">
+                                        <div>
+                                            <div class="font-semibold text-gray-900 mb-2 text-sm">
+                                                <i class="fas fa-chair text-brand-primary mr-1"></i> Seated Tickets
+                                            </div>
+                                            <template x-for="seat in selectedSeats" :key="seat.id">
+                                                <div class="flex justify-between text-sm mb-2 pl-4 animate-slide-up">
+                                                    <span class="text-gray-700" x-text="seat.label"></span>
+                                                    <span class="font-semibold text-gray-900"
+                                                        x-text="`Rp ${formatRupiah(seat.price)}`"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    {{-- General Summary --}}
+                                    <template x-if="generalTickets.some(g => g.quantity > 0)">
+                                        <div class="mt-4">
+                                            <div class="font-semibold text-gray-900 mb-2 text-sm">
+                                                <i class="fas fa-users text-brand-primary mr-1"></i> General Admission
+                                            </div>
+                                            <template x-for="cat in generalTickets" :key="cat.id">
+                                                <template x-if="cat.quantity > 0">
+                                                    <div class="flex justify-between text-sm mb-2 pl-4 animate-slide-up">
+                                                        <div>
+                                                            <p class="text-gray-700" x-text="cat.name"></p>
+                                                            <p class="text-xs text-gray-500">
+                                                                <span x-text="cat.quantity"></span> x Rp <span
+                                                                    x-text="formatRupiah(cat.price)"></span>
+                                                            </p>
+                                                        </div>
+                                                        <span class="font-semibold text-gray-900"
+                                                            x-text="`Rp ${formatRupiah(cat.quantity * cat.price)}`"></span>
+                                                    </div>
+                                                </template>
+                                            </template>
+                                        </div>
+                                    </template>
                                 </div>
 
                                 <div class="border-t border-gray-200 pt-4 mb-6">
                                     <div class="flex justify-between text-sm mb-2">
                                         <span class="text-gray-600">Total Tickets</span>
-                                        <span class="font-semibold" id="total-tickets">0</span>
+                                        <span class="font-semibold" x-text="totalTickets">0</span>
                                     </div>
                                     <div class="flex justify-between text-xl font-bold">
                                         <span>Total</span>
-                                        <span class="text-brand-yellow" id="totalAmount">Rp 0</span>
+                                        <span class="text-brand-yellow" x-text="`Rp ${formatRupiah(totalAmount)}`">Rp
+                                            0</span>
                                     </div>
                                 </div>
 
@@ -263,9 +308,15 @@
                                     </div>
                                 </div>
 
-                                <button type="submit" id="checkoutButton" disabled
-                                    class="w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed transition">
-                                    <i class="fas fa-lock mr-2"></i> Continue to Checkout
+                                <button type="submit" :disabled="totalTickets === 0"
+                                    :class="totalTickets > 0 ?
+                                        'bg-brand-yellow hover:bg-yellow-400 text-black shadow-lg scale-105' :
+                                        'bg-gray-300 text-gray-500 cursor-not-allowed'"
+                                    class="w-full font-bold py-4 rounded-xl transition transform">
+                                    <i class="fas" :class="totalTickets > 0 ? 'fa-arrow-right' : 'fa-lock'"
+                                        class="mr-2"></i>
+                                    <span
+                                        x-text="totalTickets > 0 ? 'Continue to Checkout' : 'Continue to Checkout'"></span>
                                 </button>
 
                                 <p class="text-xs text-gray-500 text-center mt-4">
@@ -277,7 +328,30 @@
                 </div>
 
                 {{-- Hidden inputs for selected seats --}}
-                <div id="hiddenInputs"></div>
+                {{-- Hidden inputs for form submission --}}
+                <div style="display:none">
+                    <template x-for="(seat, index) in selectedSeats" :key="seat.id">
+                        <div>
+                            <input type="hidden" :name="`items[${index}][ticket_category_id]`" :value="seat.categoryId">
+                            <input type="hidden" :name="`items[${index}][quantity]`" value="1">
+                            <input type="hidden" :name="`items[${index}][seat_id]`" :value="seat.id">
+                        </div>
+                    </template>
+                    <template x-for="(cat, index) in generalTickets" :key="cat.id">
+                        <template x-if="cat.quantity > 0">
+                            <div>
+                                <input type="hidden" :name="`items[${selectedSeats.length + index}][ticket_category_id]`"
+                                    :value="cat.id">
+                                <input type="hidden" :name="`items[${selectedSeats.length + index}][quantity]`"
+                                    :value="cat.quantity">
+                                <template x-if="cat.seat_id">
+                                    <input type="hidden" :name="`items[${selectedSeats.length + index}][seat_id]`"
+                                        :value="cat.seat_id">
+                                </template>
+                            </div>
+                        </template>
+                    </template>
+                </div>
             </form>
         </div>
     </div>
@@ -285,167 +359,69 @@
 
 @push('scripts')
     <script>
-        const selectedSeats = new Map();
-        const generalTickets = {};
+        function seatSelection(config) {
+            return {
+                selectedSeats: [],
+                generalTickets: config.generalCategories,
 
-        // Initialize general tickets
-        document.querySelectorAll('.general-ticket-input').forEach(input => {
-            const categoryId = input.dataset.categoryId;
-            generalTickets[categoryId] = {
-                quantity: 0,
-                price: parseFloat(input.dataset.price),
-                name: input.dataset.name,
-                max: parseInt(input.dataset.max)
-            };
-        });
+                get totalTickets() {
+                    let total = this.selectedSeats.length;
+                    this.generalTickets.forEach(t => total += t.quantity);
+                    return total;
+                },
 
-        // Seat selection handling
-        document.querySelectorAll('.seat-button').forEach(button => {
-            button.addEventListener('click', function() {
-                if (this.disabled) return;
+                get totalAmount() {
+                    let total = 0;
+                    this.selectedSeats.forEach(s => total += s.price);
+                    this.generalTickets.forEach(t => total += (t.quantity * t.price));
+                    return total;
+                },
 
-                const seatId = this.dataset.seatId;
-                const seatLabel = this.dataset.seatLabel;
-                const categoryId = this.dataset.categoryId;
-                const price = parseFloat(this.dataset.price);
-
-                if (selectedSeats.has(seatId)) {
-                    // Deselect
-                    selectedSeats.delete(seatId);
-                    this.classList.remove('bg-blue-600', 'shadow-xl', 'scale-110');
-                    this.classList.add('bg-green-500', 'hover:bg-green-600', 'shadow-md');
-                } else {
-                    // Select
-                    selectedSeats.set(seatId, {
-                        seatLabel,
-                        categoryId,
-                        price
-                    });
-                    this.classList.remove('bg-green-500', 'hover:bg-green-600', 'shadow-md');
-                    this.classList.add('bg-blue-600', 'shadow-xl', 'scale-110');
-                }
-
-                updateSummary();
-            });
-        });
-
-        function updateGeneralQty(categoryId, change) {
-            const current = generalTickets[categoryId].quantity;
-            const newQty = current + change;
-
-            if (newQty < 0 || newQty > generalTickets[categoryId].max) {
-                return;
-            }
-
-            generalTickets[categoryId].quantity = newQty;
-            document.getElementById('general-qty-' + categoryId).value = newQty;
-            document.getElementById('general-qty-display-' + categoryId).textContent = newQty;
-
-            updateSummary();
-        }
-
-        function updateSummary() {
-            const listContainer = document.getElementById('selectedSeatsList');
-            const hiddenInputsContainer = document.getElementById('hiddenInputs');
-            const checkoutButton = document.getElementById('checkoutButton');
-
-            // Clear previous content
-            listContainer.innerHTML = '';
-            hiddenInputsContainer.innerHTML = '';
-
-            let total = 0;
-            let totalTickets = 0;
-            let itemIndex = 0;
-
-            // Add selected seats
-            if (selectedSeats.size > 0) {
-                const seatsHeader = document.createElement('div');
-                seatsHeader.className = 'font-semibold text-gray-900 mb-2 text-sm';
-                seatsHeader.innerHTML = '<i class="fas fa-chair text-brand-primary mr-1"></i> Seated Tickets';
-                listContainer.appendChild(seatsHeader);
-
-                selectedSeats.forEach((seat, seatId) => {
-                    const div = document.createElement('div');
-                    div.className = 'flex justify-between text-sm mb-2 pl-4';
-                    div.innerHTML = `
-                    <span class="text-gray-700">${seat.seatLabel}</span>
-                    <span class="font-semibold text-gray-900">Rp ${formatRupiah(seat.price)}</span>
-                `;
-                    listContainer.appendChild(div);
-
-                    // Add hidden inputs
-                    hiddenInputsContainer.innerHTML += `
-                    <input type="hidden" name="items[${itemIndex}][ticket_category_id]" value="${seat.categoryId}">
-                    <input type="hidden" name="items[${itemIndex}][quantity]" value="1">
-                    <input type="hidden" name="items[${itemIndex}][seat_id]" value="${seatId}">
-                `;
-                    itemIndex++;
-                    total += seat.price;
-                    totalTickets++;
-                });
-            }
-
-            // Add general admission tickets
-            let hasGeneral = false;
-            Object.keys(generalTickets).forEach(categoryId => {
-                const ticket = generalTickets[categoryId];
-                if (ticket.quantity > 0) {
-                    if (!hasGeneral) {
-                        const generalHeader = document.createElement('div');
-                        generalHeader.className = 'font-semibold text-gray-900 mb-2 text-sm mt-4';
-                        generalHeader.innerHTML =
-                            '<i class="fas fa-users text-brand-primary mr-1"></i> General Admission';
-                        listContainer.appendChild(generalHeader);
-                        hasGeneral = true;
+                toggleSeat(id, label, categoryId, price) {
+                    const index = this.selectedSeats.findIndex(s => s.id === id);
+                    if (index >= 0) {
+                        this.selectedSeats.splice(index, 1);
+                    } else {
+                        this.selectedSeats.push({
+                            id,
+                            label,
+                            categoryId,
+                            price
+                        });
                     }
+                },
 
-                    const subtotal = ticket.quantity * ticket.price;
-                    const div = document.createElement('div');
-                    div.className = 'flex justify-between text-sm mb-2 pl-4';
-                    div.innerHTML = `
-                    <div>
-                        <p class="text-gray-700">${ticket.name}</p>
-                        <p class="text-xs text-gray-500">${ticket.quantity} x Rp ${formatRupiah(ticket.price)}</p>
-                    </div>
-                    <span class="font-semibold text-gray-900">Rp ${formatRupiah(subtotal)}</span>
-                `;
-                    listContainer.appendChild(div);
+                updateGeneralQty(categoryId, change) {
+                    const cat = this.generalTickets.find(c => c.id === categoryId);
+                    if (!cat) return;
+                    const newQty = cat.quantity + change;
+                    if (newQty >= 0 && newQty <= cat.available) {
+                        cat.quantity = newQty;
+                    }
+                },
 
-                    hiddenInputsContainer.innerHTML += `
-                    <input type="hidden" name="items[${itemIndex}][ticket_category_id]" value="${categoryId}">
-                    <input type="hidden" name="items[${itemIndex}][quantity]" value="${ticket.quantity}">
-                `;
-                    itemIndex++;
-                    total += subtotal;
-                    totalTickets += ticket.quantity;
+                getSeatClass(id, status) {
+                    if (this.selectedSeats.some(s => s.id === id)) {
+                        return 'bg-blue-600 text-white shadow-xl scale-110';
+                    }
+                    if (status === 'available')
+                    return 'bg-green-500 hover:bg-green-600 text-white shadow-md hover:shadow-lg';
+                    if (status === 'reserved') return 'bg-yellow-500 text-white cursor-not-allowed opacity-60';
+                    return 'bg-gray-400 text-white cursor-not-allowed opacity-50';
+                },
+
+                formatRupiah(amount) {
+                    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                },
+
+                validateForm(e) {
+                    if (this.totalTickets === 0) {
+                        e.preventDefault();
+                        alert('Please select at least one ticket');
+                        return false;
+                    }
                 }
-            });
-
-            // Update display
-            if (listContainer.children.length === 0) {
-                listContainer.innerHTML = `
-                <p class="text-gray-500 text-sm text-center py-8">
-                    <i class="fas fa-chair text-4xl text-gray-300 mb-2 block"></i>
-                    No seats selected
-                </p>
-            `;
-                checkoutButton.disabled = true;
-                checkoutButton.className =
-                    'w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl cursor-not-allowed transition';
-                checkoutButton.innerHTML = '<i class="fas fa-lock mr-2"></i> Continue to Checkout';
-            } else {
-                checkoutButton.disabled = false;
-                checkoutButton.className =
-                    'w-full bg-brand-yellow hover:bg-yellow-400 text-black font-bold py-4 rounded-xl transition transform hover:scale-105 shadow-lg';
-                checkoutButton.innerHTML = '<i class="fas fa-arrow-right mr-2"></i> Continue to Checkout';
             }
-
-            document.getElementById('total-tickets').textContent = totalTickets;
-            document.getElementById('totalAmount').textContent = 'Rp ' + formatRupiah(total);
-        }
-
-        function formatRupiah(amount) {
-            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
     </script>
 @endpush

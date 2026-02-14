@@ -21,7 +21,7 @@
             </div>
 
             {{-- Expiration Timer --}}
-            <div
+            <div x-data="countdownTimer('{{ $order->expires_at->toIso8601String() }}')"
                 class="card bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 mb-8 animate-pulse-slow">
                 <div class="p-6">
                     <div class="flex items-center gap-4">
@@ -35,7 +35,15 @@
                                 <span class="font-bold text-red-600">{{ $order->expires_at->format('d M Y, H:i') }}
                                     WIB</span>
                             </p>
-                            <div id="countdown" class="text-2xl font-bold text-red-600 mt-2"></div>
+                            <div class="text-2xl font-bold text-red-600 mt-2">
+                                <template x-if="!expired">
+                                    <span><i class="fas fa-clock mr-2"></i><span x-text="displayText"></span>
+                                        remaining</span>
+                                </template>
+                                <template x-if="expired">
+                                    <span class="text-red-600">EXPIRED</span>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -195,40 +203,39 @@
                     </div>
 
                     {{-- Promo Code --}}
-                    <div class="card animate-slide-up">
+                    <div class="card animate-slide-up" x-data="promoForm('{{ route('orders.applyPromo', $order->order_token) }}')">
                         <div class="p-6">
                             <h2 class="text-xl font-bold text-slate-900 mb-4">
                                 <i class="fas fa-gift text-brand-yellow mr-2"></i>
                                 Have a Promo Code?
                             </h2>
 
-                            <form action="{{ route('orders.applyPromo', $order->order_token) }}" method="POST"
-                                class="flex gap-3">
-                                @csrf
-                                <input type="text" name="promo_code" placeholder="Enter your promo code"
-                                    class="input flex-1" value="{{ old('promo_code') }}">
-                                <button type="submit"
-                                    class="bg-gray-700 hover:bg-gray-800 text-white px-8 py-3 rounded-xl font-semibold transition">
-                                    <i class="fas fa-check mr-2"></i> Apply
+                            <div class="flex gap-3">
+                                <input type="text" x-model="promoCode" placeholder="Enter your promo code"
+                                    class="input flex-1" :disabled="loading || applied">
+                                <button type="button" @click="applyPromo"
+                                    class="bg-gray-700 hover:bg-gray-800 text-white px-8 py-3 rounded-xl font-semibold transition disabled:opacity-50"
+                                    :disabled="loading || !promoCode || applied">
+                                    <i class="fas mr-2" :class="loading ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+                                    <span x-text="applied ? 'Applied' : 'Apply'"></span>
                                 </button>
-                            </form>
+                            </div>
 
-                            @if (session('promo_error'))
-                                <p class="text-red-500 text-sm mt-2">
-                                    <i class="fas fa-exclamation-circle mr-1"></i> {{ session('promo_error') }}
-                                </p>
-                            @endif
-                            @if (session('promo_success'))
-                                <p class="text-green-500 text-sm mt-2">
-                                    <i class="fas fa-check-circle mr-1"></i> {{ session('promo_success') }}
-                                </p>
-                            @endif
+                            <p x-show="message" :class="valid ? 'text-green-500' : 'text-red-500'"
+                                class="text-sm mt-2 animate-fade-in" style="display: none;">
+                                <i class="fas mr-1" :class="valid ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+                                <span x-text="message"></span>
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 {{-- RIGHT: Payment Summary Sidebar --}}
-                <div class="lg:col-span-1">
+                <div class="lg:col-span-1" x-data="{
+                    discount: {{ $order->discount_amount }},
+                    total: {{ $order->total_amount }}
+                }"
+                    @promo-applied.window="discount = $event.detail.discount; total = $event.detail.total">
                     <div class="card sticky top-28 animate-scale-in">
                         <div class="p-6">
                             <h2 class="text-xl font-bold text-slate-900 mb-6">
@@ -243,21 +250,19 @@
                                         {{ number_format($order->subtotal, 0, ',', '.') }}</span>
                                 </div>
 
-                                @if ($order->discount_amount > 0)
-                                    <div class="flex justify-between text-green-600">
-                                        <span class="flex items-center">
-                                            <i class="fas fa-tag mr-2"></i> Discount
-                                        </span>
-                                        <span class="font-semibold">-Rp
-                                            {{ number_format($order->discount_amount, 0, ',', '.') }}</span>
-                                    </div>
-                                @endif
+                                <div x-show="discount > 0" class="flex justify-between text-green-600 animate-slide-up"
+                                    style="display: none;">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-tag mr-2"></i> Discount
+                                    </span>
+                                    <span class="font-semibold">-Rp <span x-text="formatRupiah(discount)"></span></span>
+                                </div>
 
                                 <div class="border-t-2 border-gray-200 pt-4">
                                     <div class="flex justify-between items-center">
                                         <span class="text-lg font-bold text-gray-900">Total</span>
                                         <span class="text-3xl font-bold text-brand-yellow">
-                                            Rp {{ number_format($order->total_amount, 0, ',', '.') }}
+                                            Rp <span x-text="formatRupiah(total)"></span>
                                         </span>
                                     </div>
                                 </div>
@@ -299,30 +304,78 @@
 
 @push('scripts')
     <script>
-        // Countdown Timer
-        const expiresAt = new Date("{{ $order->expires_at->format('Y-m-d H:i:s') }}").getTime();
+        function countdownTimer(expiresAt) {
+            return {
+                expiresTime: new Date(expiresAt).getTime(),
+                displayText: '',
+                expired: false,
 
-        let countdownInterval = null;
+                init() {
+                    this.update();
+                    setInterval(() => this.update(), 1000);
+                },
 
-        function updateCountdown() {
-            const now = new Date().getTime();
-            const distance = expiresAt - now;
+                update() {
+                    const now = new Date().getTime();
+                    const distance = this.expiresTime - now;
 
-            if (distance < 0) {
-                document.getElementById('countdown').innerHTML = '<span class="text-red-600">EXPIRED</span>';
-                if (countdownInterval) clearInterval(countdownInterval);
-                return;
+                    if (distance < 0) {
+                        this.expired = true;
+                        return;
+                    }
+
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    this.displayText = `${hours}h ${minutes}m ${seconds}s`;
+                }
             }
-
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            document.getElementById('countdown').innerHTML =
-                `<i class="fas fa-clock mr-2"></i>${hours}h ${minutes}m ${seconds}s remaining`;
         }
 
-        updateCountdown();
-        countdownInterval = setInterval(updateCountdown, 1000);
+        function promoForm(url) {
+            return {
+                promoCode: '',
+                loading: false,
+                message: '',
+                valid: false,
+                applied: false,
+
+                async applyPromo() {
+                    this.loading = true;
+                    this.message = '';
+
+                    try {
+                        const response = await axios.post(url, {
+                            promo_code: this.promoCode
+                        });
+
+                        const data = response.data;
+                        this.valid = data.valid;
+                        this.message = data.message;
+
+                        if (data.valid) {
+                            this.applied = true;
+                            // Update total UI by dispatching event
+                            window.dispatchEvent(new CustomEvent('promo-applied', {
+                                detail: {
+                                    discount: data.discount_amount,
+                                    total: data.total_amount
+                                }
+                            }));
+                        }
+                    } catch (error) {
+                        this.valid = false;
+                        this.message = error.response?.data?.message || 'Something went wrong';
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+
+        function formatRupiah(amount) {
+            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
     </script>
 @endpush

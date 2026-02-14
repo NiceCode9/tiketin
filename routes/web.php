@@ -6,9 +6,10 @@ use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 // Public event browsing
-Route::get('/', [EventController::class, 'index'])->name('home');
+Route::get('/', [EventController::class, 'home'])->name('home');
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
-Route::get('/events/{slug}', [EventController::class, 'show'])->name('events.show');
+Route::get('/events/cities', [EventController::class, 'getCities'])->name('events.cities');
+Route::get('/events/{event:slug}', [EventController::class, 'show'])->name('events.show');
 
 // Order creation and checkout
 Route::get('/events/{slug}/order', [OrderController::class, 'create'])->name('orders.create');

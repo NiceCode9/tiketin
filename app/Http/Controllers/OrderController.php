@@ -118,14 +118,31 @@ class OrderController extends Controller
             );
 
             if (! $result['valid']) {
+                if ($request->expectsJson()) {
+                    return response()->json(['valid' => false, 'message' => $result['message']]);
+                }
                 return back()->with('error', $result['message']);
             }
 
             $promo = $result['promo_code'];
             $this->promoService->applyPromoCode($order, $promo);
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'valid' => true,
+                    'message' => 'Promo code applied successfully',
+                    'discount_amount' => $order->discount_amount,
+                    'total_amount' => $order->total_amount,
+                    'formatted_discount' => number_format($order->discount_amount, 0, ',', '.'),
+                    'formatted_total' => number_format($order->total_amount, 0, ',', '.'),
+                ]);
+            }
+
             return back()->with('success', 'Promo code applied successfully');
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json(['valid' => false, 'message' => $e->getMessage()]);
+            }
             return back()->with('error', $e->getMessage());
         }
     }
