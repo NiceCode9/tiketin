@@ -32,6 +32,11 @@ class PaymentService
      */
     public function createSnapToken(Order $order): string
     {
+        // Reuse existing snap token if available
+        if ($order->snap_token) {
+            return $order->snap_token;
+        }
+
         $params = [
             'transaction_details' => [
                 'order_id' => $order->order_number,
@@ -49,8 +54,25 @@ class PaymentService
         ];
 
         try {
-            return Snap::getSnapToken($params);
+            $snapToken = Snap::getSnapToken($params);
+            
+            // Save token for resumption
+            $order->update(['snap_token' => $snapToken]);
+            
+            return $snapToken;
         } catch (\Exception $e) {
+            // Fallback: If "order_id already used", try with a suffix (last resort)
+            if (str_contains($e->getMessage(), 'order_id sudah digunakan')) {
+                $params['transaction_details']['order_id'] = $order->order_number . '_' . time();
+                try {
+                    $snapToken = Snap::getSnapToken($params);
+                    $order->update(['snap_token' => $snapToken]);
+                    return $snapToken;
+                } catch (\Exception $e2) {
+                    throw new \Exception('Failed to create payment token after fallback: '.$e2->getMessage());
+                }
+            }
+            
             throw new \Exception('Failed to create payment token: '.$e->getMessage());
         }
     }
@@ -71,8 +93,11 @@ class PaymentService
 
         $transaction = $notif->transaction_status;
         $type = $notif->payment_type;
-        $orderId = $notif->order_id;
+        $orderIdWithSuffix = $notif->order_id;
         $fraud = $notif->fraud_status;
+
+        // Extract original order_number (handle both simple and suffixed IDs)
+        $orderId = explode('_', $orderIdWithSuffix)[0];
 
         $order = Order::where('order_number', $orderId)->firstOrFail();
 

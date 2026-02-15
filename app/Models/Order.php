@@ -35,6 +35,7 @@ class Order extends Model
         'paid_at',
         'expires_at',
         'invoice_path',
+        'snap_token',
     ];
 
     protected $casts = [
