@@ -27,6 +27,7 @@ Route::get('/events/{slug}/order', [OrderController::class, 'create'])->name('or
 Route::post('/events/{slug}/order', [OrderController::class, 'store'])->name('orders.store');
 Route::get('/orders/{orderToken}/checkout', [OrderController::class, 'checkout'])->name('orders.checkout');
 Route::post('/orders/{orderToken}/promo', [OrderController::class, 'applyPromo'])->name('orders.applyPromo');
+Route::post('/orders/{orderToken}/refresh-payment', [OrderController::class, 'refreshPayment'])->name('orders.refreshPayment');
 Route::post('/orders/{orderToken}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 Route::get('/orders/{orderToken}/status', [OrderController::class, 'status'])->name('orders.status');
 Route::get('/orders/{orderToken}', [OrderController::class, 'show'])->name('orders.show');

@@ -6,6 +6,8 @@ use App\Models\Event;
 use App\Models\Order;
 use App\Services\OrderService;
 use App\Services\PromoService;
+use App\Services\InvoiceService;
+use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -15,7 +17,8 @@ class OrderController extends Controller
     public function __construct(
         protected OrderService $orderService,
         protected PromoService $promoService,
-        protected \App\Services\InvoiceService $invoiceService
+        protected InvoiceService $invoiceService,
+        protected PaymentService $paymentService
     ) {}
 
     /**
@@ -167,6 +170,22 @@ class OrderController extends Controller
     }
 
     /**
+     * Refresh payment (Change Payment Method)
+     */
+    public function refreshPayment(string $orderToken)
+    {
+        $order = Order::where('order_token', $orderToken)
+            ->where('payment_status', 'pending')
+            ->firstOrFail();
+
+        // Just clear the snap token to allow a new one to be generated
+        $order->update(['snap_token' => null]);
+
+        return redirect()->route('orders.show', $orderToken)
+            ->with('success', 'Silakan pilih kembali metode pembayaran Anda.');
+    }
+
+    /**
      * Cancel an order manually
      */
     public function cancel(string $orderToken)
@@ -177,6 +196,9 @@ class OrderController extends Controller
 
         try {
             DB::transaction(function () use ($order) {
+                // Sync with Midtrans (Cancel the transaction)
+                $this->paymentService->cancelTransaction($order);
+
                 // Release reserved seats
                 foreach ($order->orderItems as $item) {
                     if ($item->seat_id) {
@@ -187,7 +209,10 @@ class OrderController extends Controller
                     $item->ticketCategory->decrement('sold_count', $item->quantity);
                 }
 
-                $order->update(['payment_status' => 'canceled']);
+                $order->update([
+                    'payment_status' => 'canceled',
+                    'snap_token' => null
+                ]);
             });
 
             return redirect()->route('orders.show', $orderToken)->with('success', 'Order cancelled successfully.');

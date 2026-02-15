@@ -159,6 +159,36 @@ class PaymentService
     }
 
     /**
+     * Cancel transaction in Midtrans
+     */
+    public function cancelTransaction(Order $order): bool
+    {
+        try {
+            // If there's no snap token, there might not be a transaction in Midtrans yet
+            if (!$order->snap_token) {
+                return true;
+            }
+
+            // We attempt to cancel both the base order number and any potential suffixed IDs
+            // Note: Midtrans cancel API only works if the transaction exists and is in 'challenge' or 'pending' status
+            try {
+                \Midtrans\Transaction::cancel($order->order_number);
+            } catch (\Exception $e) {
+                // Ignore if not found or already canceled/expired
+            }
+
+            // Also clear the local snap token to allow a fresh start if they decide to "re-order" or if we use it for refresh
+            $order->update(['snap_token' => null]);
+
+            return true;
+        } catch (\Exception $e) {
+            // Log error but don't block the main flow
+            report($e);
+            return false;
+        }
+    }
+
+    /**
      * Get item details for Midtrans
      */
     protected function getItemDetails(Order $order): array

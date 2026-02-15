@@ -49,18 +49,30 @@
                                 <span class="font-black underline">{{ $order->expires_at->format('d M Y, H:i') }} WIB</span>
                             </p>
                         </div>
-                        <div class="ml-auto flex items-center gap-3">
+                        <div class="ml-auto flex flex-wrap items-center justify-end gap-3 sm:gap-4">
                             <form action="{{ route('orders.cancel', $order->order_token) }}" method="POST"
                                 onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')">
                                 @csrf
                                 <button type="submit"
-                                    class="text-slate-400 hover:text-red-500 text-xs font-bold transition-colors">
+                                    class="text-slate-400 hover:text-red-500 text-[10px] font-black uppercase tracking-wider transition-colors">
                                     Batalkan Pesanan
                                 </button>
                             </form>
+                            
+                            @if($order->snap_token)
+                                <form action="{{ route('orders.refreshPayment', $order->order_token) }}" method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                        class="text-brand-primary hover:text-brand-secondary text-[10px] font-black uppercase tracking-wider transition-colors">
+                                        Ganti Metode Pembayaran
+                                    </button>
+                                </form>
+                            @endif
+
                             <a href="{{ route('payment.initiate', $order->order_token) }}"
-                                class="bg-brand-yellow hover:bg-yellow-400 text-black font-black py-2 px-6 rounded-xl transition shadow-md text-sm">
-                                Bayar Sekarang
+                                class="bg-brand-yellow hover:bg-yellow-400 text-black font-black py-2.5 px-6 rounded-xl transition shadow-md text-sm flex items-center gap-2">
+                                <i class="fas fa-wallet text-xs"></i>
+                                {{ $order->snap_token ? 'Lanjutkan Pembayaran' : 'Bayar Sekarang' }}
                             </a>
                         </div>
                     </div>
