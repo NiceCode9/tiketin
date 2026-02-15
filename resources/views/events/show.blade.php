@@ -80,15 +80,80 @@
 
                 {{-- Description --}}
                 @if ($event->description)
-                    <div class="border-t pt-6">
-                        <h3 class="text-xl font-bold text-gray-900 mb-4">Tentang Event Ini</h3>
-                        <div class="prose max-w-none text-gray-700">
+                    <div class="border-t pt-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-4">Tentang Event Ini</h3>
+                        <div class="prose prose-lg max-w-none text-gray-700">
                             {!! $event->description !!}
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Additional Images Gallery --}}
+                @if ($event->additional_images && count($event->additional_images) > 0)
+                    <div class="border-t mt-10 pt-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Galeri Event</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            @foreach ($event->additional_images as $image)
+                                <div class="relative aspect-square overflow-hidden rounded-xl group cursor-pointer shadow-sm hover:shadow-md transition-all">
+                                    <img src="{{ Storage::url($image) }}" alt="Event image" 
+                                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 @endif
             </div>
         </div>
+
+        {{-- Venue Information --}}
+        @if ($event->venue)
+            <div class="card mb-8 animate-slide-up">
+                <div class="p-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 font-display">
+                        <i class="fas fa-map-marked-alt text-brand-primary mr-3"></i>
+                        Informasi Venue
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {{-- Venue Image --}}
+                        <div class="md:col-span-1">
+                            <div class="rounded-2xl overflow-hidden shadow-lg aspect-video md:aspect-square">
+                                @if ($event->venue->image)
+                                    <img src="{{ Storage::url($event->venue->image) }}" alt="{{ $event->venue->name }}"
+                                        class="w-full h-full object-cover">
+                                @else
+                                    <div class="w-full h-full bg-slate-100 flex items-center justify-center">
+                                        <i class="fas fa-building text-slate-300 text-5xl"></i>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        
+                        {{-- Venue Text Info --}}
+                        <div class="md:col-span-2 flex flex-col justify-center">
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ $event->venue->name }}</h3>
+                            <p class="text-lg text-gray-700 mb-4 flex items-start gap-2">
+                                <i class="fas fa-map-marker-alt text-brand-secondary mt-1"></i>
+                                {{ $event->venue->address }}, {{ $event->venue->city }}
+                            </p>
+                            
+                            <div class="flex flex-wrap gap-4 mt-2">
+                                <div class="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl flex items-center gap-2">
+                                    <i class="fas fa-users text-brand-primary"></i>
+                                    <span class="text-sm font-semibold">Kapasitas: {{ number_format($event->venue->capacity, 0, ',', '.') }}</span>
+                                </div>
+                                @if($event->venue->has_seating)
+                                    <div class="bg-blue-50 border border-blue-100 px-4 py-2 rounded-xl flex items-center gap-2 text-blue-700">
+                                        <i class="fas fa-couch"></i>
+                                        <span class="text-sm font-semibold">Tersedia Tempat Duduk</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- Ticket Categories --}}
         <div class="card animate-slide-up">
@@ -166,5 +231,19 @@
                 @endif
             </div>
         </div>
+        {{-- Terms and Conditions --}}
+        @if ($event->terms_and_conditions)
+            <div class="card mt-8 animate-slide-up">
+                <div class="p-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 font-display">
+                        <i class="fas fa-file-contract text-brand-primary mr-3"></i>
+                        Syarat & Ketentuan
+                    </h2>
+                    <div class="prose prose-slate max-w-none text-gray-600 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        {!! $event->terms_and_conditions !!}
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 @endsection

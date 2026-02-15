@@ -89,6 +89,19 @@
         @apply skeleton h-64 w-full;
     }
 
+    /* Prose / Rich Text Content Fixes */
+    .prose ul {
+        @apply list-disc list-inside mb-4;
+    }
+
+    .prose ol {
+        @apply list-decimal list-inside mb-4;
+    }
+
+    .prose li {
+        @apply mb-1;
+    }
+
     /* Event Card Specific */
     .event-card {
         @apply card-hover;

@@ -81,6 +81,10 @@ class EventResource extends Resource
                         Forms\Components\RichEditor::make('description')
                             ->columnSpanFull(),
                         
+                        Forms\Components\RichEditor::make('terms_and_conditions')
+                            ->label('Terms and Conditions')
+                            ->columnSpanFull(),
+                        
                         Forms\Components\FileUpload::make('banner_image')
                             ->image()
                             ->imageEditor()

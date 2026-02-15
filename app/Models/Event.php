@@ -29,6 +29,7 @@ class Event extends Model
         'has_assigned_seating',
         'wristband_exchange_start',
         'wristband_exchange_end',
+        'terms_and_conditions',
     ];
 
     protected $casts = [
