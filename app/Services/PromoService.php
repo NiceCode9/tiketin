@@ -54,7 +54,7 @@ class PromoService
             // Update order
             $order->update([
                 'discount_amount' => $discountAmount,
-                'total_amount' => $order->subtotal - $discountAmount,
+                'total_amount' => $order->subtotal + $order->total_biaya_layanan + $order->total_biaya_admin_payment - $discountAmount,
             ]);
 
             // Create usage record
@@ -95,7 +95,7 @@ class PromoService
             return [
                 'valid' => true,
                 'discount_amount' => $discountAmount,
-                'final_amount' => $subtotal - $discountAmount,
+                'final_amount' => $subtotal + $event->total_biaya_layanan + $event->total_biaya_admin_payment - $discountAmount,
                 'promo_code' => $promo,
             ];
         } catch (\Exception $e) {

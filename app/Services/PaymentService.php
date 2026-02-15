@@ -149,6 +149,24 @@ class PaymentService
             ];
         }
 
+        if ($order->total_biaya_layanan > 0) {
+            $items[] = [
+                'id' => 'SERVICE_FEE',
+                'price' => (int) $order->total_biaya_layanan,
+                'quantity' => 1,
+                'name' => 'Service Fee',
+            ];
+        }
+
+        if ($order->total_biaya_admin_payment > 0) {
+            $items[] = [
+                'id' => 'ADMIN_FEE',
+                'price' => (int) $order->total_biaya_admin_payment,
+                'quantity' => 1,
+                'name' => 'Payment Admin Fee',
+            ];
+        }
+
         if ($order->discount_amount > 0) {
             $items[] = [
                 'id' => 'DISCOUNT',

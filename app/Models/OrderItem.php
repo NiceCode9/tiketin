@@ -16,12 +16,16 @@ class OrderItem extends Model
         'seat_id',
         'quantity',
         'unit_price',
+        'biaya_layanan',
+        'biaya_admin_payment',
         'subtotal',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'unit_price' => 'decimal:2',
+        'biaya_layanan' => 'decimal:2',
+        'biaya_admin_payment' => 'decimal:2',
         'subtotal' => 'decimal:2',
     ];
 

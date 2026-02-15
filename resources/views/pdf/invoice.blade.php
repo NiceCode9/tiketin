@@ -309,6 +309,20 @@
                     <span class="total-row-label">Subtotal</span>
                     <span class="total-row-value">Rp {{ number_format($order->subtotal, 0, ',', '.') }}</span>
                 </div>
+                @if ($order->total_biaya_layanan > 0)
+                    <div class="total-row">
+                        <span class="total-row-label">Service Fee</span>
+                        <span class="total-row-value">Rp
+                            {{ number_format($order->total_biaya_layanan, 0, ',', '.') }}</span>
+                    </div>
+                @endif
+                @if ($order->total_biaya_admin_payment > 0)
+                    <div class="total-row">
+                        <span class="total-row-label">Admin Fee</span>
+                        <span class="total-row-value">Rp
+                            {{ number_format($order->total_biaya_admin_payment, 0, ',', '.') }}</span>
+                    </div>
+                @endif
                 @if ($order->discount_amount > 0)
                     <div class="total-row" style="color: #059669;">
                         <span class="total-row-label">Discount</span>

@@ -34,6 +34,8 @@ class OrderService
             ]);
 
             $subtotal = 0;
+            $totalBiayaLayanan = 0;
+            $totalBiayaAdminPayment = 0;
 
             // Create order items
             foreach ($data['items'] as $item) {
@@ -60,7 +62,12 @@ class OrderService
                 }
 
                 $itemSubtotal = $ticketCategory->price * $item['quantity'];
+                $itemBiayaLayanan = $ticketCategory->biaya_layanan * $item['quantity'];
+                $itemBiayaAdminPayment = $ticketCategory->biaya_admin_payment * $item['quantity'];
+
                 $subtotal += $itemSubtotal;
+                $totalBiayaLayanan += $itemBiayaLayanan;
+                $totalBiayaAdminPayment += $itemBiayaAdminPayment;
 
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -68,6 +75,8 @@ class OrderService
                     'seat_id' => $seatId,
                     'quantity' => $item['quantity'],
                     'unit_price' => $ticketCategory->price,
+                    'biaya_layanan' => $ticketCategory->biaya_layanan,
+                    'biaya_admin_payment' => $ticketCategory->biaya_admin_payment,
                     'subtotal' => $itemSubtotal,
                 ]);
 
@@ -78,7 +87,9 @@ class OrderService
             // Update order totals
             $order->update([
                 'subtotal' => $subtotal,
-                'total_amount' => $subtotal,
+                'total_biaya_layanan' => $totalBiayaLayanan,
+                'total_biaya_admin_payment' => $totalBiayaAdminPayment,
+                'total_amount' => $subtotal + $totalBiayaLayanan + $totalBiayaAdminPayment,
             ]);
 
             return $order->fresh(['orderItems']);
@@ -102,10 +113,12 @@ class OrderService
             }
         }
 
-        $total = $subtotal - $discountAmount;
+        $total = $subtotal + $order->total_biaya_layanan + $order->total_biaya_admin_payment - $discountAmount;
 
         return [
             'subtotal' => $subtotal,
+            'total_biaya_layanan' => $order->total_biaya_layanan,
+            'total_biaya_admin_payment' => $order->total_biaya_admin_payment,
             'discount_amount' => $discountAmount,
             'total_amount' => max(0, $total),
         ];

@@ -320,6 +320,22 @@
                         <span class="text-xs font-bold uppercase tracking-widest">Subtotal</span>
                         <span class="font-bold font-mono">Rp {{ number_format($order->subtotal, 0, ',', '.') }}</span>
                     </div>
+
+                    @if ($order->total_biaya_layanan > 0)
+                        <div class="flex justify-between items-center text-slate-500">
+                            <span class="text-xs font-bold uppercase tracking-widest">Biaya Layanan</span>
+                            <span class="font-bold font-mono">Rp
+                                {{ number_format($order->total_biaya_layanan, 0, ',', '.') }}</span>
+                        </div>
+                    @endif
+
+                    @if ($order->total_biaya_admin_payment > 0)
+                        <div class="flex justify-between items-center text-slate-500">
+                            <span class="text-xs font-bold uppercase tracking-widest">Biaya Admin</span>
+                            <span class="font-bold font-mono">Rp
+                                {{ number_format($order->total_biaya_admin_payment, 0, ',', '.') }}</span>
+                        </div>
+                    @endif
                     @if ($order->discount_amount > 0)
                         <div class="flex justify-between items-center text-emerald-600">
                             <div class="flex flex-col">

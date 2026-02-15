@@ -18,6 +18,8 @@ class TicketCategory extends Model
         'venue_section_id',
         'name',
         'price',
+        'biaya_layanan',
+        'biaya_admin_payment',
         'quota',
         'sold_count',
         'is_seated',
@@ -25,6 +27,8 @@ class TicketCategory extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
+        'biaya_layanan' => 'decimal:2',
+        'biaya_admin_payment' => 'decimal:2',
         'quota' => 'integer',
         'sold_count' => 'integer',
         'is_seated' => 'boolean',

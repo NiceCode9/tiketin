@@ -250,6 +250,22 @@
                                         {{ number_format($order->subtotal, 0, ',', '.') }}</span>
                                 </div>
 
+                                @if ($order->total_biaya_layanan > 0)
+                                    <div class="flex justify-between text-gray-700">
+                                        <span>Biaya Layanan</span>
+                                        <span class="font-semibold">Rp
+                                            {{ number_format($order->total_biaya_layanan, 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
+
+                                @if ($order->total_biaya_admin_payment > 0)
+                                    <div class="flex justify-between text-gray-700">
+                                        <span>Biaya Admin</span>
+                                        <span class="font-semibold">Rp
+                                            {{ number_format($order->total_biaya_admin_payment, 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
+
                                 <div x-show="discount > 0" class="flex justify-between text-green-600 animate-slide-up"
                                     style="display: none;">
                                     <span class="flex items-center">

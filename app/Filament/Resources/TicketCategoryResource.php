@@ -39,9 +39,26 @@ class TicketCategoryResource extends Resource
                             ->placeholder('e.g., VIP, Regular, Festival'),
                         
                         Forms\Components\TextInput::make('price')
+                            ->label('Base Price')
                             ->required()
                             ->numeric()
                             ->prefix('Rp')
+                            ->minValue(0),
+
+                        Forms\Components\TextInput::make('biaya_layanan')
+                            ->label('Service Fee')
+                            ->required()
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->default(0)
+                            ->minValue(0),
+
+                        Forms\Components\TextInput::make('biaya_admin_payment')
+                            ->label('Payment Admin Fee')
+                            ->required()
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->default(0)
                             ->minValue(0),
                         
                         Forms\Components\TextInput::make('quota')
@@ -88,8 +105,21 @@ class TicketCategoryResource extends Resource
                     ->sortable(),
                 
                 Tables\Columns\TextColumn::make('price')
+                    ->label('Base Price')
                     ->money('IDR')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('biaya_layanan')
+                    ->label('Service Fee')
+                    ->money('IDR')
+                    ->sortable()
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('biaya_admin_payment')
+                    ->label('Admin Fee')
+                    ->money('IDR')
+                    ->sortable()
+                    ->toggleable(),
                 
                 Tables\Columns\TextColumn::make('quota')
                     ->numeric()

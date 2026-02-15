@@ -26,6 +26,8 @@ class Order extends Model
         'consumer_identity_type',
         'consumer_identity_number',
         'subtotal',
+        'total_biaya_layanan',
+        'total_biaya_admin_payment',
         'discount_amount',
         'total_amount',
         'payment_status',
@@ -37,6 +39,8 @@ class Order extends Model
 
     protected $casts = [
         'subtotal' => 'decimal:2',
+        'total_biaya_layanan' => 'decimal:2',
+        'total_biaya_admin_payment' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'paid_at' => 'datetime',
