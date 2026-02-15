@@ -107,8 +107,8 @@
 @endsection
 
 @push('scripts')
-    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}">
-    </script>
+    <script type="text/javascript" src="{{ config('midtrans.snap_url') }}"
+        data-client-key="{{ config('midtrans.client_key') }}"></script>
     <script>
         const snapToken = '{{ $snapToken }}';
         const loadingEl = document.getElementById('payment-loading');

@@ -19,8 +19,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <!-- Midtrans Snap (Sandbox) -->
-    <script type="text/javascript" src="{{ config('midtrans.snap_url') }}"
-        data-client-key="{{ config('midtrans.client_key') }}"></script>
+    {{-- <script type="text/javascript" src="{{ config('midtrans.snap_url') }}"
+        data-client-key="{{ config('midtrans.client_key') }}"></script> --}}
 
     @stack('styles')
     @stack('head-scripts')

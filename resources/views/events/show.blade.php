@@ -187,6 +187,21 @@
             </div>
         @endif
 
+        {{-- Terms and Conditions --}}
+        @if ($event->terms_and_conditions)
+            <div class="card mt-8 animate-slide-up">
+                <div class="p-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6 font-display">
+                        <i class="fas fa-file-contract text-brand-primary mr-3"></i>
+                        Syarat & Ketentuan
+                    </h2>
+                    <div class="prose prose-slate max-w-none text-gray-600 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        {!! $event->terms_and_conditions !!}
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Ticket Categories --}}
         <div class="card animate-slide-up">
             <div class="p-8">
@@ -263,19 +278,5 @@
                 @endif
             </div>
         </div>
-        {{-- Terms and Conditions --}}
-        @if ($event->terms_and_conditions)
-            <div class="card mt-8 animate-slide-up">
-                <div class="p-8">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6 font-display">
-                        <i class="fas fa-file-contract text-brand-primary mr-3"></i>
-                        Syarat & Ketentuan
-                    </h2>
-                    <div class="prose prose-slate max-w-none text-gray-600 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                        {!! $event->terms_and_conditions !!}
-                    </div>
-                </div>
-            </div>
-        @endif
     </div>
 @endsection
