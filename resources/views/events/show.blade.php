@@ -105,30 +105,33 @@
                             @endforeach
                         </div>
 
-                        {{-- Lightbox Modal --}}
-                        <div x-show="showModal" 
-                            x-transition:enter="transition ease-out duration-300"
-                            x-transition:enter-start="opacity-0"
-                            x-transition:enter-end="opacity-100"
-                            x-transition:leave="transition ease-in duration-200"
-                            x-transition:leave-start="opacity-100"
-                            x-transition:leave-end="opacity-0"
-                            class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-sm"
-                            style="display: none;"
-                            @click.away="showModal = false"
-                            @keydown.escape.window="showModal = false">
-                            
-                            <button @click="showModal = false" class="absolute top-6 right-6 text-white text-3xl hover:text-brand-yellow transition-colors z-10">
-                                <i class="fas fa-times"></i>
-                            </button>
+                        {{-- Lightbox Modal (Teleported to Body to avoid stacking issues) --}}
+                        <template x-teleport="body">
+                            <div x-show="showModal" 
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0"
+                                x-transition:enter-end="opacity-100"
+                                x-transition:leave="transition ease-in duration-200"
+                                x-transition:leave-start="opacity-100"
+                                x-transition:leave-end="opacity-0"
+                                class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md cursor-zoom-out"
+                                style="display: none;"
+                                @click="showModal = false"
+                                @keydown.escape.window="showModal = false">
+                                
+                                <button @click="showModal = false" class="absolute top-8 right-8 text-white/70 hover:text-white text-4xl transition-all duration-300 z-[10000] hover:scale-110 active:scale-95">
+                                    <i class="fas fa-times"></i>
+                                </button>
 
-                            <div class="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center"
-                                x-transition:enter="transition ease-out duration-300 transform"
-                                x-transition:enter-start="scale-95 translate-y-4"
-                                x-transition:enter-end="scale-100 translate-y-0">
-                                <img :src="modalImage" alt="Preview Image" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl border-4 border-white/10">
+                                <div class="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center"
+                                    @click.stop
+                                    x-transition:enter="transition ease-out duration-300 transform"
+                                    x-transition:enter-start="scale-95 translate-y-4"
+                                    x-transition:enter-end="scale-100 translate-y-0">
+                                    <img :src="modalImage" alt="Preview Image" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl border-4 border-white/20 select-none cursor-default">
+                                </div>
                             </div>
-                        </div>
+                        </template>
                     </div>
                 @endif
             </div>
