@@ -38,7 +38,7 @@ class EventController extends Controller
     public function index(Request $request)
     {
         $query = Event::where('status', 'published')
-            ->where('event_date', '>=', now())
+            // ->where('event_date', '>=', now())
             ->with(['venue', 'eventCategory', 'ticketCategories']);
 
         // Filter by City

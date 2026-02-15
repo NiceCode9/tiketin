@@ -300,9 +300,21 @@
                     {{-- Event Cards Grid --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                         @foreach ($events as $event)
+                            @php $isPassed = $event->event_date < now(); @endphp
                             <div
-                                class="group bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full">
-                                <a href="{{ route('events.show', $event->slug) }}" class="flex flex-col h-full">
+                                class="group bg-white rounded-2xl shadow-sm transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col h-full {{ $isPassed ? 'opacity-70 grayscale shadow-none' : 'hover:shadow-md' }}">
+                                @if ($isPassed)
+                                    <div class="flex flex-col h-full relative cursor-not-allowed">
+                                        <div
+                                            class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                                            <span
+                                                class="bg-slate-800 text-white font-black px-6 py-2 rounded-xl rotate-[-15deg] shadow-2xl border-2 border-white/20 uppercase tracking-widest text-sm">
+                                                Sudah Berakhir
+                                            </span>
+                                        </div>
+                                    @else
+                                        <a href="{{ route('events.show', $event->slug) }}" class="flex flex-col h-full">
+                                @endif
                                     {{-- Image Container --}}
                                     <div class="relative h-48 overflow-hidden">
                                         @if ($event->banner_image)
@@ -368,7 +380,11 @@
                                             </p>
                                         </div>
                                     </div>
-                                </a>
+                                @if ($isPassed)
+                                    </div>
+                                @else
+                                    </a>
+                                @endif
                             </div>
                         @endforeach
                     </div>

@@ -4,6 +4,21 @@
 
 @section('content')
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {{-- Event Status Alert --}}
+        @if ($event->event_date < now())
+            <div class="bg-slate-900 border-l-4 border-slate-500 p-6 mb-8 rounded-2xl shadow-xl animate-slide-down">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center mr-4 border border-slate-700">
+                        <i class="fas fa-calendar-check text-slate-400 text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="font-black text-white text-lg uppercase tracking-tight">Event Telah Berakhir</p>
+                        <p class="text-sm text-slate-400">Maaf, penjualan tiket untuk event ini sudah ditutup karena periode pelaksanaan event telah terlaksana atau berakhir.</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Event Header with Image --}}
         <div class="card mb-8 animate-fade-in">
             {{-- Banner Image --}}
@@ -129,12 +144,19 @@
 
                     {{-- Buy Tickets Button --}}
                     <div class="text-center">
-                        <a href="{{ route('orders.create', $event->slug) }}"
-                            class="btn-yellow text-lg px-12 py-4 inline-flex items-center gap-3 shadow-xl hover:shadow-2xl">
-                            <i class="fas fa-shopping-cart"></i>
-                            Beli Tiket Sekarang
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
+                        @if ($event->event_date < now())
+                            <div class="inline-flex items-center gap-3 bg-slate-100 text-slate-400 border border-slate-200 text-lg px-12 py-4 rounded-2xl font-black cursor-not-allowed">
+                                <i class="fas fa-lock"></i>
+                                PENJUALAN DITUTUP
+                            </div>
+                        @else
+                            <a href="{{ route('orders.create', $event->slug) }}"
+                                class="btn-yellow text-lg px-12 py-4 inline-flex items-center gap-3 shadow-xl hover:shadow-2xl">
+                                <i class="fas fa-shopping-cart"></i>
+                                Beli Tiket Sekarang
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        @endif
                     </div>
                 @else
                     <div class="text-center py-12">
