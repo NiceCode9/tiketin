@@ -90,15 +90,44 @@
 
                 {{-- Additional Images Gallery --}}
                 @if ($event->additional_images && count($event->additional_images) > 0)
-                    <div class="border-t mt-10 pt-8">
-                        <h3 class="text-2xl font-bold text-gray-900 mb-6">Galeri Event</h3>
+                    <div class="border-t mt-10 pt-8" x-data="{ showModal: false, modalImage: '' }">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6 font-display">Galeri Event</h3>
                         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             @foreach ($event->additional_images as $image)
-                                <div class="relative aspect-square overflow-hidden rounded-xl group cursor-pointer shadow-sm hover:shadow-md transition-all">
+                                <div class="relative aspect-square overflow-hidden rounded-xl group cursor-pointer shadow-sm hover:shadow-md transition-all border border-slate-100"
+                                    @click="showModal = true; modalImage = '{{ Storage::url($image) }}'">
                                     <img src="{{ Storage::url($image) }}" alt="Event image" 
                                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                        <i class="fas fa-search-plus text-white text-2xl"></i>
+                                    </div>
                                 </div>
                             @endforeach
+                        </div>
+
+                        {{-- Lightbox Modal --}}
+                        <div x-show="showModal" 
+                            x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0"
+                            x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition ease-in duration-200"
+                            x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0"
+                            class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-sm"
+                            style="display: none;"
+                            @click.away="showModal = false"
+                            @keydown.escape.window="showModal = false">
+                            
+                            <button @click="showModal = false" class="absolute top-6 right-6 text-white text-3xl hover:text-brand-yellow transition-colors z-10">
+                                <i class="fas fa-times"></i>
+                            </button>
+
+                            <div class="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center"
+                                x-transition:enter="transition ease-out duration-300 transform"
+                                x-transition:enter-start="scale-95 translate-y-4"
+                                x-transition:enter-end="scale-100 translate-y-0">
+                                <img :src="modalImage" alt="Preview Image" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl border-4 border-white/10">
+                            </div>
                         </div>
                     </div>
                 @endif
