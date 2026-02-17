@@ -69,6 +69,8 @@
                             id: {{ $category->id }},
                             name: '{{ $category->name }}',
                             price: {{ $category->price }},
+                            biaya_layanan: {{ $category->biaya_layanan ?? 0 }},
+                            biaya_admin_payment: {{ $category->biaya_admin_payment ?? 0 }},
                             available: {{ $category->available_count }},
                             quantity: 0
                         }, @endforeach
@@ -159,7 +161,7 @@
                                                                 class="seat-button w-12 h-12 rounded-lg text-sm font-bold transition-all duration-200 transform hover:scale-110"
                                                                 :class="getSeatClass({{ $seat->id }},
                                                                     '{{ $seat->status }}')"
-                                                                @click="toggleSeat({{ $seat->id }}, '{{ $seat->full_seat }}', {{ $categories->first()->id }}, {{ $categories->first()->price }})"
+                                                                @click="toggleSeat({{ $seat->id }}, '{{ $seat->full_seat }}', {{ $categories->first()->id }}, {{ $categories->first()->price }}, {{ $categories->first()->biaya_layanan ?? 0 }}, {{ $categories->first()->biaya_admin_payment ?? 0 }})"
                                                                 @if ($seat->status !== 'available') disabled @endif>
                                                                 {{ $seat->seat_number }}
                                                             </button>
@@ -265,15 +267,34 @@
 
                                     {{-- Seated Summary --}}
                                     <template x-if="selectedSeats.length > 0">
-                                        <div>
-                                            <div class="font-semibold text-gray-900 mb-2 text-sm">
+                                        <div class="space-y-4">
+                                            <div class="font-semibold text-gray-900 text-sm">
                                                 <i class="fas fa-chair text-brand-primary mr-1"></i> Seated Tickets
                                             </div>
                                             <template x-for="seat in selectedSeats" :key="seat.id">
-                                                <div class="flex justify-between text-sm mb-2 pl-4 animate-slide-up">
-                                                    <span class="text-gray-700" x-text="seat.label"></span>
-                                                    <span class="font-semibold text-gray-900"
-                                                        x-text="`Rp ${formatRupiah(seat.price)}`"></span>
+                                                <div class="pl-4 space-y-1 animate-slide-up">
+                                                    <div class="flex justify-between text-sm">
+                                                        <span class="font-medium text-gray-900" x-text="seat.label"></span>
+                                                        <span class="font-bold text-gray-900" x-text="`Rp ${formatRupiah(seat.price + seat.biaya_layanan + seat.biaya_admin_payment)}`"></span>
+                                                    </div>
+                                                    <div class="pl-2 space-y-0.5 border-l-2 border-gray-100">
+                                                        <div class="flex justify-between text-[11px] text-gray-500">
+                                                            <span>Price</span>
+                                                            <span x-text="`Rp ${formatRupiah(seat.price)}`"></span>
+                                                        </div>
+                                                        <template x-if="seat.biaya_layanan > 0">
+                                                            <div class="flex justify-between text-[11px] text-gray-500">
+                                                                <span>Service Fee</span>
+                                                                <span x-text="`Rp ${formatRupiah(seat.biaya_layanan)}`"></span>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="seat.biaya_admin_payment > 0">
+                                                            <div class="flex justify-between text-[11px] text-gray-500">
+                                                                <span>Admin Fee</span>
+                                                                <span x-text="`Rp ${formatRupiah(seat.biaya_admin_payment)}`"></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
                                                 </div>
                                             </template>
                                         </div>
@@ -281,22 +302,35 @@
 
                                     {{-- General Summary --}}
                                     <template x-if="generalTickets.some(g => g.quantity > 0)">
-                                        <div class="mt-4">
-                                            <div class="font-semibold text-gray-900 mb-2 text-sm">
+                                        <div class="mt-6 space-y-4 border-t border-gray-100 pt-4">
+                                            <div class="font-semibold text-gray-900 text-sm">
                                                 <i class="fas fa-users text-brand-primary mr-1"></i> General Admission
                                             </div>
                                             <template x-for="cat in generalTickets" :key="cat.id">
                                                 <template x-if="cat.quantity > 0">
-                                                    <div class="flex justify-between text-sm mb-2 pl-4 animate-slide-up">
-                                                        <div>
-                                                            <p class="text-gray-700" x-text="cat.name"></p>
-                                                            <p class="text-xs text-gray-500">
-                                                                <span x-text="cat.quantity"></span> x Rp <span
-                                                                    x-text="formatRupiah(cat.price)"></span>
-                                                            </p>
+                                                    <div class="pl-4 space-y-1 animate-slide-up">
+                                                        <div class="flex justify-between text-sm">
+                                                            <span class="font-medium text-gray-900" x-text="cat.name"></span>
+                                                            <span class="font-bold text-gray-900" x-text="`Rp ${formatRupiah(cat.quantity * (cat.price + cat.biaya_layanan + cat.biaya_admin_payment))}`"></span>
                                                         </div>
-                                                        <span class="font-semibold text-gray-900"
-                                                            x-text="`Rp ${formatRupiah(cat.quantity * cat.price)}`"></span>
+                                                        <div class="pl-2 space-y-0.5 border-l-2 border-gray-100">
+                                                            <div class="flex justify-between text-[11px] text-gray-500">
+                                                                <span x-text="`${cat.quantity} x Price`"></span>
+                                                                <span x-text="`Rp ${formatRupiah(cat.quantity * cat.price)}`"></span>
+                                                            </div>
+                                                            <template x-if="cat.biaya_layanan > 0">
+                                                                <div class="flex justify-between text-[11px] text-gray-500">
+                                                                    <span x-text="`${cat.quantity} x Service Fee`"></span>
+                                                                    <span x-text="`Rp ${formatRupiah(cat.quantity * cat.biaya_layanan)}`"></span>
+                                                                </div>
+                                                            </template>
+                                                            <template x-if="cat.biaya_admin_payment > 0">
+                                                                <div class="flex justify-between text-[11px] text-gray-500">
+                                                                    <span x-text="`${cat.quantity} x Admin Fee`"></span>
+                                                                    <span x-text="`Rp ${formatRupiah(cat.quantity * cat.biaya_admin_payment)}`"></span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
                                                     </div>
                                                 </template>
                                             </template>
@@ -304,15 +338,26 @@
                                     </template>
                                 </div>
 
-                                <div class="border-t border-gray-200 pt-4 mb-6">
-                                    <div class="flex justify-between text-sm mb-2">
+                                <div class="border-t border-gray-200 pt-4 mb-6 space-y-2">
+                                    <div class="flex justify-between text-sm">
                                         <span class="text-gray-600">Total Tickets</span>
                                         <span class="font-semibold" x-text="totalTickets">0</span>
                                     </div>
-                                    <div class="flex justify-between text-xl font-bold">
+                                    <template x-if="totalServiceFee > 0">
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Service Fee</span>
+                                            <span class="font-semibold" x-text="`Rp ${formatRupiah(totalServiceFee)}`"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="totalAdminFee > 0">
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Admin Fee</span>
+                                            <span class="font-semibold" x-text="`Rp ${formatRupiah(totalAdminFee)}`"></span>
+                                        </div>
+                                    </template>
+                                    <div class="flex justify-between text-xl font-bold pt-2 border-t border-gray-100">
                                         <span>Total</span>
-                                        <span class="text-brand-yellow" x-text="`Rp ${formatRupiah(totalAmount)}`">Rp
-                                            0</span>
+                                        <span class="text-brand-yellow" x-text="`Rp ${formatRupiah(totalAmount)}`">Rp 0</span>
                                     </div>
                                 </div>
 
@@ -461,12 +506,26 @@
 
                 get totalAmount() {
                     let total = 0;
-                    this.selectedSeats.forEach(s => total += s.price);
-                    this.generalTickets.forEach(t => total += (t.quantity * t.price));
+                    this.selectedSeats.forEach(s => total += (s.price + s.biaya_layanan + s.biaya_admin_payment));
+                    this.generalTickets.forEach(t => total += (t.quantity * (t.price + t.biaya_layanan + t.biaya_admin_payment)));
                     return total;
                 },
 
-                toggleSeat(id, label, categoryId, price) {
+                get totalServiceFee() {
+                    let total = 0;
+                    this.selectedSeats.forEach(s => total += s.biaya_layanan);
+                    this.generalTickets.forEach(t => total += (t.quantity * t.biaya_layanan));
+                    return total;
+                },
+
+                get totalAdminFee() {
+                    let total = 0;
+                    this.selectedSeats.forEach(s => total += s.biaya_admin_payment);
+                    this.generalTickets.forEach(t => total += (t.quantity * t.biaya_admin_payment));
+                    return total;
+                },
+
+                toggleSeat(id, label, categoryId, price, biaya_layanan, biaya_admin_payment) {
                     const index = this.selectedSeats.findIndex(s => s.id === id);
                     if (index >= 0) {
                         this.selectedSeats.splice(index, 1);
@@ -475,7 +534,9 @@
                             id,
                             label,
                             categoryId,
-                            price
+                            price,
+                            biaya_layanan,
+                            biaya_admin_payment
                         });
                     }
                 },

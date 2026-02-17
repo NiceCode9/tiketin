@@ -63,14 +63,18 @@ class DatabaseSeeder extends Seeder
                 TicketCategory::factory()->create([
                     'event_id' => $event->id,
                     'name' => 'VIP',
-                    'price' => 1000000,
+                    'price' => 80000,
+                    'biaya_layanan' => 3000,
+                    'biaya_admin_payment' => 2000,
                     'quota' => 100,
                 ]);
 
                 TicketCategory::factory()->create([
                     'event_id' => $event->id,
                     'name' => 'Regular',
-                    'price' => 500000,
+                    'price' => 42000,
+                    'biaya_layanan' => 3000,
+                    'biaya_admin_payment' => 2000,
                     'quota' => 500,
                 ]);
 

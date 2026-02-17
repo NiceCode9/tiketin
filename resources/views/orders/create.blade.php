@@ -68,6 +68,8 @@
                             id: {{ $category->id }},
                             name: '{{ $category->name }}',
                             price: {{ $category->price }},
+                            biaya_layanan: {{ $category->biaya_layanan ?? 0 }},
+                            biaya_admin_payment: {{ $category->biaya_admin_payment ?? 0 }},
                             available: {{ $category->available_count }},
                             quantity: 0
                         }, @endforeach
@@ -320,27 +322,52 @@
                                     </template>
                                     <template x-for="cat in categories" :key="cat.id">
                                         <template x-if="cat.quantity > 0">
-                                            <div class="flex justify-between text-sm animate-slide-up">
-                                                <div>
-                                                    <p class="font-medium text-gray-900" x-text="cat.name"></p>
-                                                    <p class="text-xs text-gray-500">
-                                                        <span x-text="cat.quantity"></span> x Rp <span
-                                                            x-text="formatRupiah(cat.price)"></span>
-                                                    </p>
+                                            <div class="space-y-1 mb-4 animate-slide-up">
+                                                <div class="flex justify-between text-sm">
+                                                    <span class="font-bold text-gray-900" x-text="cat.name"></span>
+                                                    <span class="font-bold text-gray-900" x-text="`Rp ${formatRupiah(cat.quantity * (cat.price + cat.biaya_layanan + cat.biaya_admin_payment))}`"></span>
                                                 </div>
-                                                <p class="font-semibold text-gray-900">Rp <span
-                                                        x-text="formatRupiah(cat.quantity * cat.price)"></span></p>
+                                                <div class="pl-2 space-y-0.5 border-l-2 border-gray-100 ml-1">
+                                                    <div class="flex justify-between text-[11px] text-gray-500">
+                                                        <span x-text="`${cat.quantity} x Price`"></span>
+                                                        <span x-text="`Rp ${formatRupiah(cat.quantity * cat.price)}`"></span>
+                                                    </div>
+                                                    <template x-if="cat.biaya_layanan > 0">
+                                                        <div class="flex justify-between text-[11px] text-gray-500">
+                                                            <span x-text="`${cat.quantity} x Service Fee`"></span>
+                                                            <span x-text="`Rp ${formatRupiah(cat.quantity * cat.biaya_layanan)}`"></span>
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="cat.biaya_admin_payment > 0">
+                                                        <div class="flex justify-between text-[11px] text-gray-500">
+                                                            <span x-text="`${cat.quantity} x Admin Fee`"></span>
+                                                            <span x-text="`Rp ${formatRupiah(cat.quantity * cat.biaya_admin_payment)}`"></span>
+                                                        </div>
+                                                    </template>
+                                                </div>
                                             </div>
                                         </template>
                                     </template>
                                 </div>
 
-                                <div class="border-t border-gray-200 pt-4 mb-6">
-                                    <div class="flex justify-between text-sm mb-2">
+                                <div class="border-t border-gray-200 pt-4 mb-6 space-y-2">
+                                    <div class="flex justify-between text-sm">
                                         <span class="text-gray-600">Total Tickets</span>
                                         <span class="font-semibold" x-text="totalTickets">0</span>
                                     </div>
-                                    <div class="flex justify-between text-xl font-bold">
+                                    <template x-if="totalServiceFee > 0">
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Service Fee</span>
+                                            <span class="font-semibold" x-text="`Rp ${formatRupiah(totalServiceFee)}`"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="totalAdminFee > 0">
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Admin Fee</span>
+                                            <span class="font-semibold" x-text="`Rp ${formatRupiah(totalAdminFee)}`"></span>
+                                        </div>
+                                    </template>
+                                    <div class="flex justify-between text-xl font-bold pt-2 border-t border-gray-100">
                                         <span>Total</span>
                                         <span class="text-brand-yellow" x-text="`Rp ${formatRupiah(totalAmount)}`">Rp 0</span>
                                     </div>
@@ -408,7 +435,15 @@
                 },
 
                 get totalAmount() {
-                    return this.categories.reduce((acc, cat) => acc + (cat.quantity * cat.price), 0);
+                    return this.categories.reduce((acc, cat) => acc + (cat.quantity * (cat.price + cat.biaya_layanan + cat.biaya_admin_payment)), 0);
+                },
+
+                get totalServiceFee() {
+                    return this.categories.reduce((acc, cat) => acc + (cat.quantity * cat.biaya_layanan), 0);
+                },
+
+                get totalAdminFee() {
+                    return this.categories.reduce((acc, cat) => acc + (cat.quantity * cat.biaya_admin_payment), 0);
                 },
 
                 updateQuantity(index, change) {

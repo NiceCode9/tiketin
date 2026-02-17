@@ -21,10 +21,12 @@ class DashboardStatsOverview extends BaseWidget
 
         // 1. Total Revenue
         $revenueQuery = Order::query()->where('payment_status', 'paid');
+        
         if ($isClientAdmin) {
             $revenueQuery->whereHas('event', fn ($q) => $q->where('client_id', $clientId));
         }
-        $revenue = $revenueQuery->sum('total_amount');
+
+        $revenue = $revenueQuery->sum($isClientAdmin ? 'subtotal' : 'total_amount');
 
         // 2. Tickets Sold
         $ticketQuery = Ticket::query();

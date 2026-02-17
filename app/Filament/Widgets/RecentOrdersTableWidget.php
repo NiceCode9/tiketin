@@ -42,7 +42,8 @@ class RecentOrdersTableWidget extends BaseWidget
                     ->label('Customer'),
                 Tables\Columns\TextColumn::make('event.name')
                     ->label('Event'),
-                Tables\Columns\TextColumn::make('total_amount')
+                Tables\Columns\TextColumn::make(Auth::user()->hasRole('client_admin') ? 'subtotal' : 'total_amount')
+                    ->label('Total')
                     ->money('IDR')
                     ->sortable(),
                 Tables\Columns\BadgeColumn::make('payment_status')
