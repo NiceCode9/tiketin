@@ -23,6 +23,7 @@ class TicketCategory extends Model
         'quota',
         'sold_count',
         'is_seated',
+        'ticket_count',
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class TicketCategory extends Model
         'quota' => 'integer',
         'sold_count' => 'integer',
         'is_seated' => 'boolean',
+        'ticket_count' => 'integer',
     ];
 
     /**

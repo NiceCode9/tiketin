@@ -23,7 +23,10 @@ class TicketService
             $tickets = collect();
 
             foreach ($order->orderItems as $item) {
-                for ($i = 0; $i < $item->quantity; $i++) {
+                $ticketCount = $item->ticketCategory->ticket_count ?? 1;
+                $totalTicketsToGenerate = $item->quantity * $ticketCount;
+                
+                for ($i = 0; $i < $totalTicketsToGenerate; $i++) {
                     $ticket = Ticket::create([
                         'order_id' => $order->id,
                         'ticket_category_id' => $item->ticket_category_id,

@@ -72,6 +72,14 @@ class TicketCategoryResource extends Resource
                             ->default(0)
                             ->disabled()
                             ->helperText('Automatically updated when tickets are sold'),
+
+                        Forms\Components\TextInput::make('ticket_count')
+                            ->label('Tickets per Purchase')
+                            ->required()
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(1)
+                            ->helperText('Number of tickets generated for each purchase item (Bundling)'),
                     ])
                     ->columns(2),
                 
@@ -141,6 +149,12 @@ class TicketCategoryResource extends Resource
                 
                 Tables\Columns\TextColumn::make('venueSection.name')
                     ->label('Section')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('ticket_count')
+                    ->label('Tickets/Item')
+                    ->numeric()
+                    ->sortable()
                     ->toggleable(),
             ])
             ->filters([

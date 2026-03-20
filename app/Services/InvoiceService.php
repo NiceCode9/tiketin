@@ -15,20 +15,21 @@ class InvoiceService
      */
     public function generateInvoice(Order $order): string
     {
-        // Generate QR code for order
-        $qrCodeData = json_encode([
-            'order_number' => $order->order_number,
-            'identity_number' => $order->consumer_identity_number,
-            'total_amount' => $order->total_amount,
-        ]);
+        $order->loadMissing(['tickets.ticketCategory', 'tickets.seat']);
+        $ticketService = app(TicketService::class);
+        $qrCodes = [];
 
-        $qrCode = base64_encode(QrCode::format('png')
-            ->size(200)
-            ->margin(1)
-            ->generate($qrCodeData));
+        foreach ($order->tickets as $ticket) {
+            $qrData = json_encode($ticketService->getQRCodeData($ticket));
+            
+            $qrCodes[$ticket->id] = base64_encode(QrCode::format('png')
+                ->size(200)
+                ->margin(1)
+                ->generate($qrData));
+        }
 
         // Render PDF
-        $pdf = Pdf::loadView('pdf.invoice', compact('order', 'qrCode'));
+        $pdf = Pdf::loadView('pdf.invoice', compact('order', 'qrCodes'));
 
         // Use A4 paper and Portrait orientation
         $pdf->setPaper('a4', 'portrait');

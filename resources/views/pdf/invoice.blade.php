@@ -181,6 +181,54 @@
             line-height: 1.4;
         }
 
+        /* Multi-ticket table */
+        .tickets-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .ticket-td {
+            width: 33.33%;
+            padding: 10px;
+            border: 1px solid #fed7aa;
+            /* orange-200 */
+            text-align: center;
+            vertical-align: top;
+            background: #fff;
+        }
+
+        .ticket-qr-img {
+            margin-bottom: 8px;
+        }
+
+        .ticket-name {
+            font-size: 10px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 2px;
+            height: 12px;
+            overflow: hidden;
+        }
+
+        .ticket-uuid {
+            font-size: 8px;
+            color: #999;
+            font-family: monospace;
+            margin-bottom: 5px;
+        }
+
+        .ticket-cat-label {
+            display: inline-block;
+            padding: 2px 5px;
+            background: #f3f4f6;
+            color: #4b5563;
+            font-size: 8px;
+            font-weight: bold;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
         .footer {
             margin-top: 50px;
             text-align: center;
@@ -339,16 +387,41 @@
         </div>
 
         <div class="qr-section">
-            <div class="qr-code">
-                <img src="data:image/png;base64,{{ $qrCode }}" width="100" height="100">
-            </div>
             <div class="qr-info">
                 <h4>EXCHANGE FOR WRISTBAND</h4>
-                <p>Scan this QR code at the event entrance to exchange for your physical wristband. Please bring a valid
-                    ID matching the details on this invoice.</p>
-                <div style="margin-top: 10px; font-weight: bold; color: #92400e; font-size: 12px;">ORDER:
-                    {{ $order->order_number }}</div>
+                <p>Scan the QR codes below at the event entrance to exchange for your physical wristbands. Each QR code corresponds to one person/ticket. Please bring a valid ID matching the details on this invoice.</p>
+                <div style="margin-top: 10px; font-weight: bold; color: #92400e; font-size: 12px;">ORDER: {{ $order->order_number }}</div>
             </div>
+
+            <table class="tickets-table">
+                @foreach ($order->tickets->chunk(3) as $chunk)
+                    <tr>
+                        @foreach ($chunk as $ticket)
+                            <td class="ticket-td">
+                                <div class="ticket-qr-img">
+                                    @if(isset($qrCodes[$ticket->id]))
+                                        <img src="data:image/png;base64,{{ $qrCodes[$ticket->id] }}" width="100" height="100">
+                                    @else
+                                        <div style="font-size: 9px; color: red;">QR Loading Error</div>
+                                    @endif
+                                </div>
+                                <div class="ticket-name">{{ $ticket->consumer_name }}</div>
+                                <div class="ticket-uuid">{{ substr($ticket->uuid, 0, 8) }}...</div>
+                                <div class="ticket-cat-label">{{ $ticket->ticketCategory->name }}</div>
+                                @if ($ticket->seat)
+                                    <div style="font-size: 8px; font-weight: bold; margin-top: 3px; color: #1f2937;">SEAT: {{ $ticket->seat->name }}</div>
+                                @endif
+                            </td>
+                        @endforeach
+                        {{-- Add empty cells to maintain grid if chunk is less than 3 --}}
+                        @if ($chunk->count() < 3)
+                            @for ($i = 0; $i < 3 - $chunk->count(); $i++)
+                                <td class="ticket-td" style="border: none; background: transparent;"></td>
+                            @endfor
+                        @endif
+                    </tr>
+                @endforeach
+            </table>
             <div style="clear: both;"></div>
         </div>
 
