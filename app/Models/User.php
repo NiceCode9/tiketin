@@ -10,8 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, SoftDeletes, HasRoles;
@@ -81,5 +83,21 @@ class User extends Authenticatable
     public function validatedWristbands(): HasMany
     {
         return $this->hasMany(Wristband::class, 'validated_by');
+    }
+
+    /**
+     * Determine if the user can access the Filament panel.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // if ($this->hasRole('super_admin')) {
+        //     return true;
+        // }
+
+        if ($this->hasAnyRole(['wristband_exchange_officer', 'wristband_validator'])) {
+            return false;
+        }
+
+        return true;
     }
 }

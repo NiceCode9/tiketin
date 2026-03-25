@@ -31,12 +31,14 @@ class WristbandService
 
             // Update ticket status
             $ticket->update(['status' => 'exchanged']);
-
-            // Log the exchange
+            
+            // Note: Scan is logged in the controller or should be here?
+            // Existing service code has it here, but controller also has it.
+            // Let's keep it consistent: Service handles internal logging.
             $scanService = app(ScanService::class);
             $scanService->logScan(
                 $officer,
-                $ticket,
+                $wristband,
                 'exchange',
                 true
             );
@@ -121,15 +123,40 @@ class WristbandService
     }
 
     /**
-     * Get wristband QR code data
+     * Parse and validate QR code string (format: uuid|checksum)
      */
-    public function getQRCodeData(Wristband $wristband): array
+    public function validateQR(string $qrCode): array
     {
-        return [
-            'type' => 'wristband',
-            'id' => $wristband->uuid,
-            'ticket_id' => $wristband->ticket->uuid,
-            'checksum' => $wristband->checksum,
-        ];
+        try {
+            $parts = explode('|', $qrCode);
+            if (count($parts) !== 2) {
+                return [
+                    'valid' => false,
+                    'message' => 'Invalid QR code format. Expected uuid|checksum.'
+                ];
+            }
+
+            [$uuid, $checksum] = $parts;
+            $wristband = $this->validateWristbandQR($uuid, $checksum);
+
+            return [
+                'valid' => true,
+                'wristband' => $wristband,
+                'message' => 'Wristband validated successfully'
+            ];
+        } catch (\Exception $e) {
+            return [
+                'valid' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get wristband QR code data as string
+     */
+    public function getQRCodeData(Wristband $wristband): string
+    {
+        return $wristband->uuid . '|' . $wristband->checksum;
     }
 }

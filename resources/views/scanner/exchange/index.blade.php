@@ -70,15 +70,16 @@
 @push('scripts')
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
-    let html5QrCode;
+    let html5QrcodeScanner = null;
     let currentTicketId = null;
     let selectedEventId = null;
+    let isProcessing = false;
 
     document.getElementById('eventSelect').addEventListener('change', function() {
         selectedEventId = this.value;
         if (selectedEventId) {
             document.getElementById('scannerSection').classList.remove('hidden');
-            startScanner();
+            resetScanner();
         } else {
             document.getElementById('scannerSection').classList.add('hidden');
             stopScanner();
@@ -86,30 +87,38 @@
     });
 
     function startScanner() {
-        html5QrCode = new Html5Qrcode("qr-reader");
-        html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: 250 },
-            onScanSuccess,
-            onScanError
-        ).catch(err => {
-            console.error("Camera error:", err);
-            showStatus('Camera not available. Please use manual input.', 'warning');
-        });
+        if (html5QrcodeScanner) return;
+
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "qr-reader",
+            { 
+                fps: 10, 
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            },
+            /* verbose= */ false
+        );
+        html5QrcodeScanner.render(onScanSuccess, onScanError);
     }
 
-    function stopScanner() {
-        if (html5QrCode) {
-            html5QrCode.stop().catch(err => console.error(err));
+    async function stopScanner() {
+        if (html5QrcodeScanner) {
+            try {
+                await html5QrcodeScanner.clear();
+                html5QrcodeScanner = null;
+            } catch (err) {
+                console.error("Failed to clear scanner:", err);
+            }
         }
     }
 
     function onScanSuccess(decodedText) {
+        if (isProcessing) return;
         processQR(decodedText);
     }
 
     function onScanError(error) {
-        // Ignore scan errors (happens frequently)
+        // Ignored to avoid console spam during search
     }
 
     function scanManual() {
@@ -125,6 +134,9 @@
             return;
         }
 
+        if (isProcessing) return;
+        isProcessing = true;
+        
         showStatus('Processing...', 'info');
 
         fetch('{{ route("scanner.exchange.scan") }}', {
@@ -146,10 +158,12 @@
                 stopScanner();
             } else {
                 showStatus(data.message, 'error');
+                isProcessing = false;
             }
         })
         .catch(error => {
             showStatus('Error: ' + error.message, 'error');
+            isProcessing = false;
         });
     }
 
@@ -230,12 +244,16 @@
 
     function resetScanner() {
         currentTicketId = null;
+        isProcessing = false;
         document.getElementById('manualQR').value = '';
         document.getElementById('ticketInfo').classList.add('hidden');
         document.getElementById('wristbandQR').classList.add('hidden');
         document.getElementById('qr-reader').style.display = 'block';
         document.getElementById('statusMessage').classList.add('hidden');
-        startScanner();
+        
+        stopScanner().then(() => {
+            startScanner();
+        });
     }
 
     function showStatus(message, type) {

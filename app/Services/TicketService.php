@@ -60,6 +60,36 @@ class TicketService
     }
 
     /**
+     * Parse and validate QR code string (format: uuid|checksum)
+     */
+    public function validateQR(string $qrCode): array
+    {
+        try {
+            $parts = explode('|', $qrCode);
+            if (count($parts) !== 2) {
+                return [
+                    'valid' => false,
+                    'message' => 'Invalid QR code format. Expected uuid|checksum.'
+                ];
+            }
+
+            [$uuid, $checksum] = $parts;
+            $ticket = $this->validateTicketQR($uuid, $checksum);
+
+            return [
+                'valid' => true,
+                'ticket' => $ticket,
+                'message' => 'Ticket validated successfully'
+            ];
+        } catch (\Exception $e) {
+            return [
+                'valid' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Check if ticket can be exchanged for wristband
      */
     public function canExchangeForWristband(Ticket $ticket): bool

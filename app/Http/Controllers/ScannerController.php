@@ -24,8 +24,8 @@ class ScannerController extends Controller
     public function exchangeIndex()
     {
         $user = auth()->user();
-        $events = Event::where('client_id', $user->client_id)
-            ->where('status', 'published')
+        $events = Event::where('client_id', '=', $user->client_id)
+            ->where('status', '=', 'published')
             ->where('event_date', '>=', now()->subDays(1))
             ->orderBy('event_date', 'asc')
             ->get();
@@ -44,6 +44,11 @@ class ScannerController extends Controller
         ]);
 
         try {
+            // Sanitize event access
+            $event = Event::where('id', '=', $request->event_id)
+                ->where('client_id', '=', auth()->user()->client_id)
+                ->firstOrFail();
+
             // Parse QR code
             $qrData = $this->ticketService->validateQR($request->qr_code);
 
@@ -57,7 +62,7 @@ class ScannerController extends Controller
             $ticket = $qrData['ticket'];
 
             // Check if ticket belongs to the event
-            if ($ticket->order->event_id != $request->event_id) {
+            if ($ticket->order->event_id != $event->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This ticket does not belong to the selected event.'
@@ -74,7 +79,7 @@ class ScannerController extends Controller
             }
 
             // Check if ticket can be exchanged
-            if (!$ticket->canExchangeForWristband()) {
+            if (! $this->ticketService->canExchangeForWristband($ticket)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This ticket cannot be exchanged at this time. Exchange window may not be open yet.'
@@ -111,25 +116,20 @@ class ScannerController extends Controller
 
         try {
             $ticket = Ticket::findOrFail($request->ticket_id);
-            $event = Event::findOrFail($request->event_id);
+            
+            // Sanitize event access
+            $event = Event::where('id', '=', $request->event_id)
+                ->where('client_id', '=', auth()->user()->client_id)
+                ->firstOrFail();
 
             // Exchange ticket for wristband
-            $wristband = $this->wristbandService->exchangeTicket($ticket, auth()->user());
-
-            // Log the scan
-            $this->scanService->logScan(
-                $wristband,
-                auth()->user(),
-                $event,
-                'exchange',
-                'success'
-            );
+            $wristband = $this->wristbandService->exchangeTicketForWristband($ticket, auth()->user());
 
             return response()->json([
                 'success' => true,
                 'message' => 'Wristband issued successfully!',
                 'wristband' => $wristband,
-                'qr_data' => $this->wristbandService->getQRData($wristband)
+                'qr_data' => $this->wristbandService->getQRCodeData($wristband)
             ]);
 
         } catch (\Exception $e) {
@@ -168,8 +168,8 @@ class ScannerController extends Controller
     public function validateIndex()
     {
         $user = auth()->user();
-        $events = Event::where('client_id', $user->client_id)
-            ->where('status', 'published')
+        $events = Event::where('client_id', '=', $user->client_id)
+            ->where('status', '=', 'published')
             ->where('event_date', '>=', now()->subDays(1))
             ->orderBy('event_date', 'asc')
             ->get();
@@ -188,6 +188,11 @@ class ScannerController extends Controller
         ]);
 
         try {
+            // Sanitize event access
+            $event = Event::where('id', '=', $request->event_id)
+                ->where('client_id', '=', auth()->user()->client_id)
+                ->firstOrFail();
+
             // Parse QR code
             $qrData = $this->wristbandService->validateQR($request->qr_code);
 
@@ -201,7 +206,7 @@ class ScannerController extends Controller
             $wristband = $qrData['wristband'];
 
             // Check if wristband belongs to the event
-            if ($wristband->ticket->order->event_id != $request->event_id) {
+            if ($wristband->ticket->order->event_id != $event->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This wristband does not belong to the selected event.'
@@ -239,20 +244,15 @@ class ScannerController extends Controller
 
         try {
             $wristband = Wristband::findOrFail($request->wristband_id);
-            $event = Event::findOrFail($request->event_id);
+            
+            // Sanitize event access
+            $event = Event::where('id', '=', $request->event_id)
+                ->where('client_id', '=', auth()->user()->client_id)
+                ->firstOrFail();
 
             // Validate entry
-            $result = $this->wristbandService->validateEntry($wristband, auth()->user());
-
-            // Log the scan
-            $this->scanService->logScan(
-                $wristband,
-                auth()->user(),
-                $event,
-                'entry',
-                $result ? 'success' : 'failed',
-                $result ? null : 'Entry validation failed'
-            );
+            // This service method already handles entry logging
+            $result = $this->wristbandService->validateWristbandEntry($wristband->uuid, auth()->user());
 
             if ($result) {
                 return response()->json([
