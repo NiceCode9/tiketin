@@ -1,16 +1,16 @@
 @extends('scanner.layout')
 
-@section('title', 'Wristband Validation')
+@section('title', 'Validasi Masuk')
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">Wristband Validation</h2>
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Validasi Masuk Pengunjung</h2>
 
     <!-- Event Selection -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <label for="eventSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Event</label>
+        <label for="eventSelect" class="block text-sm font-medium text-gray-700 mb-2">Pilih Event</label>
         <select id="eventSelect" class="w-full px-4 py-3 border rounded-lg text-lg">
-            <option value="">-- Select Event --</option>
+            <option value="">-- Pilih Event --</option>
             @foreach($events as $event)
                 <option value="{{ $event->id }}">{{ $event->name }} - {{ $event->event_date->format('d M Y') }}</option>
             @endforeach
@@ -20,22 +20,22 @@
     <!-- QR Scanner -->
     <div id="scannerSection" class="hidden">
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h3 class="text-lg font-semibold mb-4">Scan Wristband QR Code</h3>
+            <h3 class="text-lg font-semibold mb-4">Scan QR Code Wristband</h3>
             
             <!-- Camera Scanner -->
             <div id="qr-reader" class="mb-4"></div>
             
             <!-- Manual Input -->
             <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Or enter manually:</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Atau masukkan manual:</label>
                 <div class="flex gap-2">
                     <input type="text" 
                            id="manualQR" 
-                           placeholder="Paste QR code here"
+                           placeholder="Tempel QR code di sini"
                            class="flex-1 px-4 py-3 border rounded-lg text-lg">
                     <button onclick="scanManual()" 
                             class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-semibold">
-                        Scan
+                        Cek
                     </button>
                 </div>
             </div>
@@ -43,11 +43,11 @@
 
         <!-- Wristband Information -->
         <div id="wristbandInfo" class="hidden rounded-lg shadow-md p-6 mb-6">
-            <h3 class="text-lg font-semibold mb-4">Wristband Information</h3>
+            <h3 class="text-lg font-semibold mb-4">Informasi Wristband</h3>
             <div id="wristbandDetails"></div>
             <button id="confirmButton" onclick="confirmEntry()" 
                     class="w-full mt-4 py-3 px-6 rounded-lg font-semibold text-lg">
-                Confirm Entry
+                Konfirmasi Masuk
             </button>
         </div>
 
@@ -57,7 +57,7 @@
             <h3 id="resultMessage" class="text-2xl font-bold mb-4"></h3>
             <button onclick="resetScanner()" 
                     class="bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 font-semibold">
-                Scan Next Wristband
+                Scan Wristband Berikutnya
             </button>
         </div>
     </div>
@@ -130,14 +130,14 @@
 
     function processQR(qrCode) {
         if (!selectedEventId) {
-            showStatus('Please select an event first', 'error');
+            Swal.fire('Peringatan', 'Silakan pilih event terlebih dahulu', 'warning');
             return;
         }
 
         if (isProcessing) return;
         isProcessing = true;
 
-        showStatus('Processing...', 'info');
+        showStatus('Memproses...', 'info');
 
         fetch('{{ route("scanner.validate.scan") }}', {
             method: 'POST',
@@ -155,8 +155,8 @@
             if (data.success) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Wristband Validated',
-                    text: 'Wristband found for ' + data.consumer.name,
+                    title: 'Wristband Terdeteksi',
+                    text: 'Ditemukan atas nama ' + data.consumer.name,
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -166,7 +166,7 @@
             } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Invalid Wristband',
+                    title: 'Wristband Tidak Valid',
                     text: data.message
                 });
                 showStatus(data.message, 'error');
@@ -179,7 +179,7 @@
                 title: 'Error',
                 text: error.message
             });
-            showStatus('Error: ' + error.message, 'error');
+            showStatus('Kesalahan: ' + error.message, 'error');
             isProcessing = false;
         });
     }
@@ -190,24 +190,24 @@
             <div class="space-y-3">
                 <div class="flex justify-between">
                     <span class="font-semibold">Status:</span>
-                    <span class="${statusColor} font-bold">${status.toUpperCase()}</span>
+                    <span class="${statusColor} font-bold">${status.toUpperCase() === 'ACTIVE' ? 'AKTIF' : status.toUpperCase()}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="font-semibold">Category:</span>
+                    <span class="font-semibold">Kategori:</span>
                     <span>${wristband.ticket.ticket_category.name}</span>
                 </div>
                 ${wristband.ticket.seat ? `
                 <div class="flex justify-between">
-                    <span class="font-semibold">Seat:</span>
+                    <span class="font-semibold">Kursi:</span>
                     <span>${wristband.ticket.seat.full_seat}</span>
                 </div>
                 ` : ''}
                 <div class="flex justify-between">
-                    <span class="font-semibold">Consumer:</span>
+                    <span class="font-semibold">Nama Konsumen:</span>
                     <span>${consumer.name}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="font-semibold">Identity:</span>
+                    <span class="font-semibold">Identitas:</span>
                     <span>${consumer.identity}</span>
                 </div>
             </div>
@@ -225,14 +225,14 @@
             confirmButton.classList.remove('bg-green-600', 'hover:bg-green-700');
             confirmButton.classList.add('bg-gray-400', 'cursor-not-allowed');
             confirmButton.disabled = true;
-            showStatus('This wristband cannot enter at this time', 'error');
+            showStatus('Wristband ini belum bisa digunakan untuk masuk saat ini', 'error');
         }
     }
 
     function confirmEntry() {
         if (!currentWristbandId) return;
 
-        showStatus('Confirming entry...', 'info');
+        showStatus('Mengonfirmasi masuk...', 'info');
 
         fetch('{{ route("scanner.validate.confirm") }}', {
             method: 'POST',
@@ -250,7 +250,7 @@
             if (data.success) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Access Granted',
+                    title: 'Akses Diberikan',
                     text: data.message,
                     timer: 2000,
                     showConfirmButton: false
@@ -259,7 +259,7 @@
             } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Access Denied',
+                    title: 'Akses Ditolak',
                     text: data.message
                 });
                 showEntryResult(false, data.message);
@@ -272,7 +272,7 @@
                 title: 'Error',
                 text: error.message
             });
-            showEntryResult(false, 'Error: ' + error.message);
+            showEntryResult(false, 'Kesalahan: ' + error.message);
             document.getElementById('wristbandInfo').classList.add('hidden');
         });
     }

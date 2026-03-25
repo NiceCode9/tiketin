@@ -23,7 +23,7 @@ class EnsureScannerRole
 
         // Only scanner roles can access scanner pages
         if (!$user->hasRole(['wristband_exchange_officer', 'wristband_validator', 'super_admin'])) {
-            abort(403, 'You do not have permission to access scanner pages');
+            abort(403, 'Anda tidak memiliki izin untuk mengakses halaman scanner ini.');
         }
 
         return $next($request);

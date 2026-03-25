@@ -1,16 +1,16 @@
 @extends('scanner.layout')
 
-@section('title', 'Wristband Exchange')
+@section('title', 'Penukaran Tiket')
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">Wristband Exchange</h2>
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Penukaran Tiket ke Wristband</h2>
 
     <!-- Event Selection -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <label for="eventSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Event</label>
+        <label for="eventSelect" class="block text-sm font-medium text-gray-700 mb-2">Pilih Event</label>
         <select id="eventSelect" class="w-full px-4 py-3 border rounded-lg text-lg">
-            <option value="">-- Select Event --</option>
+            <option value="">-- Pilih Event --</option>
             @foreach($events as $event)
                 <option value="{{ $event->id }}">{{ $event->name }} - {{ $event->event_date->format('d M Y') }}</option>
             @endforeach
@@ -20,22 +20,22 @@
     <!-- QR Scanner -->
     <div id="scannerSection" class="hidden">
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h3 class="text-lg font-semibold mb-4">Scan Ticket QR Code</h3>
+            <h3 class="text-lg font-semibold mb-4">Scan QR Code Tiket</h3>
             
             <!-- Camera Scanner -->
             <div id="qr-reader" class="mb-4"></div>
             
             <!-- Manual Input -->
             <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Or enter manually:</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Atau masukkan manual:</label>
                 <div class="flex gap-2">
                     <input type="text" 
                            id="manualQR" 
-                           placeholder="Paste QR code here"
+                           placeholder="Tempel QR code di sini"
                            class="flex-1 px-4 py-3 border rounded-lg text-lg">
                     <button onclick="scanManual()" 
                             class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-semibold">
-                        Scan
+                        Cek
                     </button>
                 </div>
             </div>
@@ -43,21 +43,21 @@
 
         <!-- Ticket Information -->
         <div id="ticketInfo" class="hidden bg-white rounded-lg shadow-md p-6 mb-6">
-            <h3 class="text-lg font-semibold mb-4">Ticket Information</h3>
+            <h3 class="text-lg font-semibold mb-4">Informasi Tiket</h3>
             <div id="ticketDetails"></div>
             <button onclick="issueWristband()" 
                     class="w-full mt-4 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 font-semibold text-lg">
-                Issue Wristband
+                Terbitkan Wristband
             </button>
         </div>
 
         <!-- Wristband QR Code -->
         <div id="wristbandQR" class="hidden bg-white rounded-lg shadow-md p-6 text-center">
-            <h3 class="text-lg font-semibold mb-4 text-green-600">✓ Wristband Issued Successfully!</h3>
+            <h3 class="text-lg font-semibold mb-4 text-green-600">✓ Wristband Berhasil Diterbitkan!</h3>
             <div id="wristbandDetails" class="mb-4"></div>
             <button onclick="resetScanner()" 
                     class="bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 font-semibold">
-                Scan Next Ticket
+                Scan Tiket Berikutnya
             </button>
         </div>
     </div>
@@ -130,14 +130,14 @@
 
     function processQR(qrCode) {
         if (!selectedEventId) {
-            showStatus('Please select an event first', 'error');
+            Swal.fire('Peringatan', 'Silakan pilih event terlebih dahulu', 'warning');
             return;
         }
 
         if (isProcessing) return;
         isProcessing = true;
         
-        showStatus('Processing...', 'info');
+        showStatus('Memproses...', 'info');
 
         fetch('{{ route("scanner.exchange.scan") }}', {
             method: 'POST',
@@ -155,8 +155,8 @@
             if (data.success) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Ticket Found!',
-                    text: 'Scanned ticket for ' + data.consumer.name,
+                    title: 'Tiket Ditemukan!',
+                    text: 'Tiket terdaftar atas nama ' + data.consumer.name,
                     timer: 2000,
                     showConfirmButton: false
                 });
@@ -166,7 +166,7 @@
             } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Scan Reference Error',
+                    title: 'Gagal Menemukan Tiket',
                     text: data.message
                 });
                 showStatus(data.message, 'error');
@@ -176,10 +176,10 @@
         .catch(error => {
             Swal.fire({
                 icon: 'error',
-                title: 'System Error',
+                title: 'Error Sistem',
                 text: error.message
             });
-            showStatus('Error: ' + error.message, 'error');
+            showStatus('Kesalahan: ' + error.message, 'error');
             isProcessing = false;
         });
     }
@@ -188,17 +188,17 @@
         const html = `
             <div class="space-y-3">
                 <div class="flex justify-between">
-                    <span class="font-semibold">Category:</span>
+                    <span class="font-semibold">Kategori:</span>
                     <span>${ticket.ticket_category.name}</span>
                 </div>
                 ${ticket.seat ? `
                 <div class="flex justify-between">
-                    <span class="font-semibold">Seat:</span>
+                    <span class="font-semibold">Kursi:</span>
                     <span>${ticket.seat.full_seat}</span>
                 </div>
                 ` : ''}
                 <div class="flex justify-between">
-                    <span class="font-semibold">Consumer:</span>
+                    <span class="font-semibold">Nama Konsumen:</span>
                     <span>${consumer.name}</span>
                 </div>
                 <div class="flex justify-between">
@@ -206,7 +206,7 @@
                     <span>${consumer.email}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="font-semibold">Identity:</span>
+                    <span class="font-semibold">Identitas:</span>
                     <span>${consumer.identity}</span>
                 </div>
             </div>
@@ -219,7 +219,7 @@
     function issueWristband() {
         if (!currentTicketId) return;
 
-        showStatus('Issuing wristband...', 'info');
+        showStatus('Menerbitkan wristband...', 'info');
 
         fetch('{{ route("scanner.exchange.issue") }}', {
             method: 'POST',
@@ -237,7 +237,7 @@
             if (data.success) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Success!',
+                    title: 'Berhasil!',
                     text: data.message,
                     timer: 2000,
                     showConfirmButton: false
@@ -248,7 +248,7 @@
             } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Issue Failed',
+                    title: 'Gagal Menerbitkan',
                     text: data.message
                 });
                 showStatus(data.message, 'error');
@@ -260,16 +260,16 @@
                 title: 'Error',
                 text: error.message
             });
-            showStatus('Error: ' + error.message, 'error');
+            showStatus('Kesalahan: ' + error.message, 'error');
         });
     }
 
     function displayWristband(wristband, qrData) {
         const html = `
-            <div class="text-lg font-semibold mb-2">Wristband ID: ${wristband.id}</div>
+            <div class="text-lg font-semibold mb-2">ID Wristband: ${wristband.id}</div>
             <div class="text-sm text-gray-600 mb-4">QR Code: ${qrData}</div>
             <div class="bg-gray-100 p-4 rounded">
-                <p class="text-sm">Show this to the attendee or print the wristband</p>
+                <p class="text-sm">Tunjukkan ini ke pengunjung atau cetak wristband</p>
             </div>
         `;
         document.getElementById('wristbandDetails').innerHTML = html;

@@ -38,7 +38,7 @@ class ScannerAuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
+            'email' => 'Email atau kata sandi yang Anda masukkan salah.',
         ])->onlyInput('email');
     }
 
@@ -70,9 +70,8 @@ class ScannerAuthController extends Controller
             return redirect()->route('scanner.validate');
         }
 
-        // If user doesn't have scanner role, logout
         Auth::logout();
         return redirect()->route('scanner.login')
-            ->withErrors(['email' => 'You do not have permission to access the scanner system.']);
+            ->withErrors(['email' => 'Anda tidak memiliki akses ke dalam sistem scanner.']);
     }
 }

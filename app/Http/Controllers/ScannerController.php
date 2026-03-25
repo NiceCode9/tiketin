@@ -66,7 +66,7 @@ class ScannerController extends Controller
             if ($ticket->order->event_id != $event->id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This ticket does not belong to the selected event.'
+                    'message' => 'Tiket ini bukan untuk event yang dipilih.'
                 ], 400);
             }
 
@@ -74,7 +74,7 @@ class ScannerController extends Controller
             if ($ticket->wristband) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This ticket has already been exchanged for a wristband.',
+                    'message' => 'Tiket ini sudah ditukarkan dengan wristband.',
                     'wristband' => $ticket->wristband
                 ], 400);
             }
@@ -83,7 +83,7 @@ class ScannerController extends Controller
             if (! $this->ticketService->canExchangeForWristband($ticket)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This ticket cannot be exchanged at this time. Exchange window may not be open yet.'
+                    'message' => 'Tiket ini belum bisa ditukarkan saat ini. Jendela penukaran mungkin belum dibuka.'
                 ], 400);
             }
 
@@ -100,7 +100,7 @@ class ScannerController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error scanning ticket: ' . $e->getMessage()
+                'message' => 'Error saat memproses tiket: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -128,7 +128,7 @@ class ScannerController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Wristband issued successfully!',
+                'message' => 'Wristband berhasil diterbitkan!',
                 'wristband' => $wristband,
                 'qr_data' => $this->wristbandService->getQRCodeData($wristband)
             ]);
@@ -210,7 +210,7 @@ class ScannerController extends Controller
             if ($wristband->ticket->order->event_id != $event->id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This wristband does not belong to the selected event.'
+                    'message' => 'Wristband ini bukan untuk event yang dipilih.'
                 ], 400);
             }
 
@@ -228,7 +228,7 @@ class ScannerController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error scanning wristband: ' . $e->getMessage()
+                'message' => 'Error saat memproses wristband: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -258,12 +258,12 @@ class ScannerController extends Controller
             if ($result) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Entry confirmed! Welcome to the event.'
+                    'message' => 'Masuk dikonfirmasi! Selamat datang di event.'
                 ]);
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Entry denied. Wristband is not valid for entry.'
+                    'message' => 'Akses ditolak. Wristband tidak valid untuk masuk.'
                 ], 400);
             }
 

@@ -10,7 +10,7 @@
     <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Tiketin Scanner</h1>
-            <p class="text-gray-600">Sign in to access the scanner system</p>
+            <p class="text-gray-600">Masuk untuk mengakses sistem scanner</p>
         </div>
 
         @if($errors->any())
@@ -28,7 +28,7 @@
 
             <div class="mb-6">
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address
+                    Alamat Email
                 </label>
                 <input type="email" 
                        name="email" 
@@ -41,7 +41,7 @@
 
             <div class="mb-6">
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                    Password
+                    Kata Sandi
                 </label>
                 <input type="password" 
                        name="password" 
@@ -55,18 +55,18 @@
                     <input type="checkbox" 
                            name="remember" 
                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                    <span class="ml-2 text-sm text-gray-600">Remember this device</span>
+                    <span class="ml-2 text-sm text-gray-600">Ingat perangkat ini</span>
                 </label>
             </div>
 
             <button type="submit" 
                     class="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition font-semibold text-lg">
-                Sign In
+                Masuk
             </button>
         </form>
 
         <div class="mt-6 text-center text-sm text-gray-600">
-            <p>Scanner access only</p>
+            <p>Khusus akses petugas scanner</p>
         </div>
     </div>
 </body>
