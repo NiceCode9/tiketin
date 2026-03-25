@@ -20,7 +20,7 @@ class InvoiceService
         $qrCodes = [];
 
         foreach ($order->tickets as $ticket) {
-            $qrData = json_encode($ticketService->getQRCodeData($ticket));
+            $qrData = $ticketService->getQRCodeData($ticket);
             
             $qrCodes[$ticket->id] = base64_encode(QrCode::format('png')
                 ->size(200)

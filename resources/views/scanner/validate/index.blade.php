@@ -153,15 +153,32 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Wristband Validated',
+                    text: 'Wristband found for ' + data.consumer.name,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
                 displayWristbandInfo(data.wristband, data.consumer, data.can_enter, data.status);
                 currentWristbandId = data.wristband.id;
                 stopScanner();
             } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Wristband',
+                    text: data.message
+                });
                 showStatus(data.message, 'error');
                 isProcessing = false;
             }
         })
         .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message
+            });
             showStatus('Error: ' + error.message, 'error');
             isProcessing = false;
         });
@@ -231,13 +248,30 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Access Granted',
+                    text: data.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
                 showEntryResult(true, data.message);
             } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Access Denied',
+                    text: data.message
+                });
                 showEntryResult(false, data.message);
             }
             document.getElementById('wristbandInfo').classList.add('hidden');
         })
         .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message
+            });
             showEntryResult(false, 'Error: ' + error.message);
             document.getElementById('wristbandInfo').classList.add('hidden');
         });

@@ -9,6 +9,7 @@ use App\Services\TicketService;
 use App\Services\WristbandService;
 use App\Services\ScanService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ScannerController extends Controller
 {
@@ -23,7 +24,7 @@ class ScannerController extends Controller
      */
     public function exchangeIndex()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $events = Event::where('client_id', '=', $user->client_id)
             ->where('status', '=', 'published')
             ->where('event_date', '>=', now()->subDays(1))
@@ -46,7 +47,7 @@ class ScannerController extends Controller
         try {
             // Sanitize event access
             $event = Event::where('id', '=', $request->event_id)
-                ->where('client_id', '=', auth()->user()->client_id)
+                ->where('client_id', '=', Auth::user()->client_id)
                 ->firstOrFail();
 
             // Parse QR code
@@ -119,11 +120,11 @@ class ScannerController extends Controller
             
             // Sanitize event access
             $event = Event::where('id', '=', $request->event_id)
-                ->where('client_id', '=', auth()->user()->client_id)
+                ->where('client_id', '=', Auth::user()->client_id)
                 ->firstOrFail();
 
             // Exchange ticket for wristband
-            $wristband = $this->wristbandService->exchangeTicketForWristband($ticket, auth()->user());
+            $wristband = $this->wristbandService->exchangeTicketForWristband($ticket, Auth::user());
 
             return response()->json([
                 'success' => true,
@@ -148,7 +149,7 @@ class ScannerController extends Controller
         $user = auth()->user();
         
         $query = Wristband::whereHas('ticket.order.event', function($q) use ($user) {
-            $q->where('client_id', $user->client_id);
+            $q->where('client_id', '=', $user->client_id);
         })->with(['ticket.ticketCategory', 'ticket.order.event', 'exchangedBy']);
 
         if ($request->event_id) {
@@ -167,7 +168,7 @@ class ScannerController extends Controller
      */
     public function validateIndex()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $events = Event::where('client_id', '=', $user->client_id)
             ->where('status', '=', 'published')
             ->where('event_date', '>=', now()->subDays(1))
@@ -190,7 +191,7 @@ class ScannerController extends Controller
         try {
             // Sanitize event access
             $event = Event::where('id', '=', $request->event_id)
-                ->where('client_id', '=', auth()->user()->client_id)
+                ->where('client_id', '=', Auth::user()->client_id)
                 ->firstOrFail();
 
             // Parse QR code
@@ -247,12 +248,12 @@ class ScannerController extends Controller
             
             // Sanitize event access
             $event = Event::where('id', '=', $request->event_id)
-                ->where('client_id', '=', auth()->user()->client_id)
+                ->where('client_id', '=', Auth::user()->client_id)
                 ->firstOrFail();
 
             // Validate entry
             // This service method already handles entry logging
-            $result = $this->wristbandService->validateWristbandEntry($wristband->uuid, auth()->user());
+            $result = $this->wristbandService->validateWristbandEntry($wristband->uuid, Auth::user());
 
             if ($result) {
                 return response()->json([
@@ -282,7 +283,7 @@ class ScannerController extends Controller
         $user = auth()->user();
         
         $query = Wristband::whereHas('ticket.order.event', function($q) use ($user) {
-            $q->where('client_id', $user->client_id);
+            $q->where('client_id', '=', $user->client_id);
         })
         ->whereNotNull('validated_at')
         ->with(['ticket.ticketCategory', 'ticket.order.event', 'validatedBy']);

@@ -114,15 +114,11 @@ class TicketService
     }
 
     /**
-     * Get ticket QR code data
+     * Get ticket QR code data as string (uuid|checksum)
      */
-    public function getQRCodeData(Ticket $ticket): array
+    public function getQRCodeData(Ticket $ticket): string
     {
-        return [
-            'type' => 'ticket',
-            'id' => $ticket->uuid,
-            'checksum' => $ticket->checksum,
-        ];
+        return $ticket->uuid . '|' . $ticket->checksum;
     }
 
     /**

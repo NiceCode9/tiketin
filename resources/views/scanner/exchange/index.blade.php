@@ -153,15 +153,32 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Ticket Found!',
+                    text: 'Scanned ticket for ' + data.consumer.name,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
                 displayTicketInfo(data.ticket, data.consumer);
                 currentTicketId = data.ticket.id;
                 stopScanner();
             } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Scan Reference Error',
+                    text: data.message
+                });
                 showStatus(data.message, 'error');
                 isProcessing = false;
             }
         })
         .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'System Error',
+                text: error.message
+            });
             showStatus('Error: ' + error.message, 'error');
             isProcessing = false;
         });
@@ -218,14 +235,31 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: data.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
                 displayWristband(data.wristband, data.qr_data);
                 document.getElementById('ticketInfo').classList.add('hidden');
                 showStatus(data.message, 'success');
             } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Issue Failed',
+                    text: data.message
+                });
                 showStatus(data.message, 'error');
             }
         })
         .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message
+            });
             showStatus('Error: ' + error.message, 'error');
         });
     }
