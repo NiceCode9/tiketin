@@ -87,6 +87,8 @@
                                 <div class="flex items-start gap-4">
                                     @if ($event->banner_image)
                                         <img src="{{ Storage::url($event->banner_image) }}" alt="{{ $event->name }}"
+                                            width="96" height="96"
+                                            loading="lazy"
                                             class="w-24 h-24 object-cover rounded-lg">
                                     @else
                                         <div

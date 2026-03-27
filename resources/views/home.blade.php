@@ -114,8 +114,10 @@
                                 x-transition:leave-start="opacity-100 translate-x-0"
                                 x-transition:leave-end="opacity-0 -translate-x-12">
 
-                                <img src="{{ $event->banner_image ? Storage::url($event->banner_image) : 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80' }}"
-                                    class="w-full h-full object-cover" alt="{{ $event->name }}">
+                                <img src="{{ $event->banner_image ? Storage::url($event->banner_image) : asset('images/placeholder-event.svg') }}"
+                                    class="w-full h-full object-cover" alt="{{ $event->name }}"
+                                    width="1280" height="720"
+                                    loading="eager">
 
                                 <div
                                     class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent">
@@ -249,9 +251,10 @@
                         <a href="{{ route('events.show', $event->slug) }}" class="flex flex-col h-full relative">
                             {{-- Image --}}
                             <div class="relative h-60 overflow-hidden">
-                                <img src="{{ $event->banner_image ? Storage::url($event->banner_image) : 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&q=80' }}"
-                                    class="w-full h-full object-cover group-hover:scale-110 transition duration-700"
-                                    alt="{{ $event->name }}">
+                                <img src="{{ $event->banner_image ? Storage::url($event->banner_image) : asset('images/placeholder-event.svg') }}"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition duration-500" alt="{{ $event->name }}"
+                                    width="600" height="400"
+                                    loading="lazy">
 
                                 <div class="absolute top-4 left-4">
                                     <span

@@ -25,6 +25,8 @@
             <div class="relative h-96 overflow-hidden">
                 @if ($event->banner_image)
                     <img src="{{ Storage::url($event->banner_image) }}" alt="{{ $event->name }}"
+                        width="1280" height="720"
+                        loading="eager"
                         class="w-full h-full object-cover">
                 @else
                     <div class="h-full bg-gradient-to-r from-brand-primary to-brand-secondary"></div>
@@ -97,6 +99,8 @@
                                 <div class="relative aspect-square overflow-hidden rounded-xl group cursor-pointer shadow-sm hover:shadow-md transition-all border border-slate-100"
                                     @click="showModal = true; modalImage = '{{ Storage::url($image) }}'">
                                     <img src="{{ Storage::url($image) }}" alt="Event image" 
+                                        width="400" height="400"
+                                        loading="lazy"
                                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                                     <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                                         <i class="fas fa-search-plus text-white text-2xl"></i>

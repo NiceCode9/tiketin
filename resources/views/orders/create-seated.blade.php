@@ -90,6 +90,8 @@
                                         <div class="relative group">
                                             <div class="absolute -inset-1 bg-gradient-to-r from-brand-primary to-brand-secondary rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                                             <img src="{{ Storage::url($event->banner_image) }}" alt="{{ $event->name }}"
+                                                width="128" height="128"
+                                                loading="lazy"
                                                 class="relative w-32 h-32 object-cover rounded-2xl shadow-lg">
                                         </div>
                                     @else
