@@ -26,7 +26,8 @@ class SectionsRelationManager extends RelationManager
                     ->maxLength(255),
                 Forms\Components\TextInput::make('capacity')
                     ->numeric()
-                    ->required(),
+                    ->required()
+                    ->helperText('For seated venues, this will be automatically updated when seats are generated.'),
             ]);
     }
 
@@ -131,6 +132,10 @@ class SectionsRelationManager extends RelationManager
                 }
             }
         }
+
+        // Sync capacity once at the end for performance
+        $section->refresh();
+        $section->syncCapacityWithSeats();
 
         Notification::make()
             ->title("Generated $count seats successfully")

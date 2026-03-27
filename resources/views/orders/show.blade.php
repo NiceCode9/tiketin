@@ -215,79 +215,92 @@
                         <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                             @if ($order->isPaid() && $order->tickets->where('ticket_category_id', $item->ticket_category_id)->count() > 0)
                                 @foreach ($order->tickets->where('ticket_category_id', $item->ticket_category_id) as $ticket)
-                                    <div
-                                        class="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden group hover:shadow-xl transition flex flex-col h-full animate-scale-in">
-                                        {{-- Ticket Visual Top --}}
-                                        <div class="p-6 flex-grow">
-                                            <div class="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <p
-                                                        class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-0.5">
-                                                        Pemegang Tiket</p>
-                                                    <p class="font-black text-slate-900 text-base">
-                                                        {{ $order->consumer_name }}</p>
+                                    <div class="relative group animate-scale-in">
+                                        {{-- Ticket Body --}}
+                                        <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col h-full transition-all duration-500 hover:shadow-2xl hover:-translate-y-1">
+                                            {{-- Top Section: Event & Brand --}}
+                                            <div class="p-6 bg-gradient-to-br from-slate-50 to-white border-b border-slate-50 relative overflow-hidden">
+                                                <div class="absolute top-0 right-0 p-4 opacity-5">
+                                                    <i class="fas fa-ticket-alt text-6xl rotate-12"></i>
                                                 </div>
-                                                <div
-                                                    class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 italic font-black text-brand-primary text-sm shadow-inner">
-                                                    T
+                                                <div class="flex justify-between items-start relative z-10">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center text-white text-[10px] font-black italic shadow-lg shadow-brand-primary/20">T</div>
+                                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Tiketin Verified</span>
+                                                    </div>
+                                                    <div class="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-md text-[8px] font-black uppercase tracking-wider border border-emerald-100">
+                                                        Active
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="space-y-3">
-                                                <div>
-                                                    <p
-                                                        class="text-[9px] uppercase tracking-widest font-black text-brand-primary mb-0.5">
-                                                        {{ $item->ticketType->name }}</p>
-                                                    <p class="font-black text-slate-900 text-sm">
-                                                        #{{ $ticket->uuid ? substr($ticket->uuid, 0, 8) : $ticket->id }}
-                                                    </p>
+
+                                            {{-- Middle Section: Content --}}
+                                            <div class="p-8 flex-grow">
+                                                <div class="mb-6">
+                                                    <h4 class="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-1">{{ $item->ticketType->name }}</h4>
+                                                    <p class="text-xl font-black text-slate-900 leading-tight">{{ $order->event->name }}</p>
                                                 </div>
+
+                                                <div class="grid grid-cols-2 gap-6 mb-6">
+                                                    <div>
+                                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Holder</p>
+                                                        <p class="text-xs font-black text-slate-900 truncate">{{ $order->consumer_name }}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Reference</p>
+                                                        <p class="text-xs font-black text-slate-700 font-mono">#{{ $ticket->uuid ? substr($ticket->uuid, 0, 8) : $ticket->id }}</p>
+                                                    </div>
+                                                </div>
+
                                                 @if ($ticket->seat)
-                                                    <div class="flex gap-4">
-                                                        <div>
-                                                            <p
-                                                                class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-0.5">
-                                                                Section</p>
-                                                            <p
-                                                                class="text-xs font-black text-slate-900 underline decoration-brand-yellow decoration-2">
-                                                                {{ $ticket->seat->section }}</p>
+                                                    <div class="bg-slate-50 rounded-2xl p-4 flex justify-around items-center border border-slate-100">
+                                                        <div class="text-center">
+                                                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Section</p>
+                                                            <p class="text-xs font-black text-brand-primary truncate max-w-[80px]">{{ $ticket->seat->venueSection->name }}</p>
                                                         </div>
-                                                        <div>
-                                                            <p
-                                                                class="text-[9px] uppercase tracking-widest font-black text-slate-400 mb-0.5">
-                                                                Row/Seat</p>
-                                                            <p class="text-xs font-black text-slate-900">
-                                                                {{ $ticket->seat->row }}{{ $ticket->seat->number }}</p>
+                                                        <div class="w-px h-8 bg-slate-200"></div>
+                                                        <div class="text-center">
+                                                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Row</p>
+                                                            <p class="text-sm font-black text-slate-900">{{ $ticket->seat->row_label }}</p>
+                                                        </div>
+                                                        <div class="w-px h-8 bg-slate-200"></div>
+                                                        <div class="text-center">
+                                                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Seat</p>
+                                                            <p class="text-sm font-black text-slate-900">{{ $ticket->seat->seat_number }}</p>
                                                         </div>
                                                     </div>
                                                 @else
-                                                    <div class="flex items-center gap-2">
-                                                        <i class="fas fa-barcode text-slate-300 text-xs"></i>
-                                                        <p
-                                                            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                            General Admission</p>
+                                                    <div class="flex items-center gap-3 px-4 py-3 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
+                                                        <div class="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                                            <i class="fas fa-users text-brand-primary text-xs"></i>
+                                                        </div>
+                                                        <p class="text-[10px] font-black text-indigo-700 uppercase tracking-widest">General Admission</p>
                                                     </div>
                                                 @endif
                                             </div>
-                                        </div>
 
-                                        {{-- Dotted Divider --}}
-                                        <div class="relative h-px border-t border-dashed border-slate-200 mx-6">
-                                            <div
-                                                class="absolute -left-8 -top-3 w-6 h-6 bg-slate-50 border border-slate-100 rounded-full shadow-inner">
+                                            {{-- Ticket Stub Cutout --}}
+                                            <div class="relative h-6 flex items-center py-3">
+                                                <div class="absolute left-0 -ml-3 w-6 h-6 bg-slate-50 rounded-full border border-slate-100 shadow-inner"></div>
+                                                <div class="flex-1 border-t-2 border-dashed border-slate-100 mx-4"></div>
+                                                <div class="absolute right-0 -mr-3 w-6 h-6 bg-slate-50 rounded-full border border-slate-100 shadow-inner"></div>
                                             </div>
-                                            <div
-                                                class="absolute -right-8 -top-3 w-6 h-6 bg-slate-50 border border-slate-100 rounded-full shadow-inner">
-                                            </div>
-                                        </div>
 
-                                        {{-- Ticket Bottom (QR) --}}
-                                        <div class="px-6 py-4 bg-slate-50 flex items-center justify-between">
-                                            <div
-                                                class="inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-100 text-[9px] font-black text-emerald-700 border border-emerald-200 shadow-sm uppercase tracking-tighter">
-                                                <i class="fas fa-check-circle mr-1"></i> Valid E-Ticket
-                                            </div>
-                                            <div class="p-2 bg-white rounded-xl shadow-sm border border-slate-200">
-                                                {!! QrCode::size(50)->generate($ticket->uuid ?? $ticket->id) !!}
+                                            {{-- Bottom Section: QR --}}
+                                            <div class="px-8 pb-8 pt-4 flex items-center justify-between bg-white">
+                                                <div class="flex flex-col gap-1">
+                                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Check-in QR</p>
+                                                    <div class="flex items-center gap-2 text-emerald-600">
+                                                        <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+                                                        <span class="text-[9px] font-black uppercase">Ready to Scan</span>
+                                                    </div>
+                                                </div>
+                                                <div class="relative group/qr">
+                                                    <div class="absolute -inset-2 bg-brand-primary/5 rounded-2xl scale-0 group-hover/qr:scale-100 transition-transform duration-500"></div>
+                                                    <div class="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 relative z-10">
+                                                        {!! QrCode::size(55)->generate($ticket->uuid ?? $ticket->id) !!}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

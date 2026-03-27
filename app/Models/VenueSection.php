@@ -14,7 +14,26 @@ class VenueSection extends Model
     protected $fillable = [
         'venue_id',
         'name',
+        'capacity',
     ];
+
+    protected $casts = [
+        'capacity' => 'integer',
+    ];
+
+    /**
+     * Boot the model and add hooks for capacity sync
+     */
+    protected static function booted()
+    {
+        static::saved(function ($section) {
+            $section->venue->updateTotalCapacity();
+        });
+
+        static::deleted(function ($section) {
+            $section->venue->updateTotalCapacity();
+        });
+    }
 
     /**
      * A section belongs to a venue
@@ -38,5 +57,14 @@ class VenueSection extends Model
     public function ticketCategories(): HasMany
     {
         return $this->hasMany(TicketCategory::class);
+    }
+
+    /**
+     * Synchronize the capacity field with the actual count of seats
+     */
+    public function syncCapacityWithSeats(): void
+    {
+        $count = $this->seats()->count();
+        $this->update(['capacity' => $count]);
     }
 }

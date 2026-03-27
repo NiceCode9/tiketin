@@ -11,6 +11,20 @@ class Seat extends Model
 {
     use HasFactory;
 
+    /**
+     * Boot the model and add hooks for capacity sync
+     */
+    protected static function booted()
+    {
+        static::saved(function ($seat) {
+            $seat->venueSection->syncCapacityWithSeats();
+        });
+
+        static::deleted(function ($seat) {
+            $seat->venueSection->syncCapacityWithSeats();
+        });
+    }
+
     protected $fillable = [
         'venue_section_id',
         'row_label',

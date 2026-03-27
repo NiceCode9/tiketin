@@ -15,7 +15,7 @@ class InvoiceService
      */
     public function generateInvoice(Order $order): string
     {
-        $order->loadMissing(['tickets.ticketCategory', 'tickets.seat']);
+        $order->loadMissing(['tickets.ticketCategory', 'tickets.seat.venueSection']);
         $ticketService = app(TicketService::class);
         $qrCodes = [];
 

@@ -55,8 +55,14 @@ class Venue extends Model
     /**
      * A venue has many events
      */
-    public function events(): HasMany
+    /**
+     * Update the total capacity of the venue based on its sections
+     */
+    public function updateTotalCapacity(): void
     {
-        return $this->hasMany(Event::class);
+        if ($this->has_seating) {
+            $total = $this->sections()->sum('capacity');
+            $this->update(['capacity' => $total]);
+        }
     }
 }

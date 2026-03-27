@@ -163,7 +163,7 @@ class OrderController extends Controller
     public function show(string $orderToken)
     {
         $order = Order::where('order_token', $orderToken)
-            ->with(['event', 'orderItems.ticketCategory', 'tickets'])
+            ->with(['event', 'orderItems.ticketCategory', 'tickets.seat.venueSection'])
             ->firstOrFail();
 
         return view('orders.show', compact('order'));

@@ -409,7 +409,7 @@
                                 <div class="ticket-uuid">{{ substr($ticket->uuid, 0, 8) }}...</div>
                                 <div class="ticket-cat-label">{{ $ticket->ticketCategory->name }}</div>
                                 @if ($ticket->seat)
-                                    <div style="font-size: 8px; font-weight: bold; margin-top: 3px; color: #1f2937;">SEAT: {{ $ticket->seat->name }}</div>
+                                    <div style="font-size: 8px; font-weight: bold; margin-top: 3px; color: #1f2937;">SEAT: {{ $ticket->seat->full_seat }} ({{ $ticket->seat->venueSection->name }})</div>
                                 @endif
                             </td>
                         @endforeach

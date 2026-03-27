@@ -6,10 +6,11 @@ use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 // Public event browsing
-Route::get('/', [EventController::class, 'home'])->name('home');
-Route::get('/events', [EventController::class, 'index'])->name('events.index');
+Route::get('/', [EventController::class, 'home'])->middleware('throttle:search')->name('home');
+Route::get('/events', [EventController::class, 'index'])->middleware('throttle:search')->name('events.index');
 Route::get('/events/cities', [EventController::class, 'getCities'])->name('events.cities');
 Route::get('/events/{event:slug}', [EventController::class, 'show'])->name('events.show');
+Route::get('/events/{slug}/seat-status', [\App\Http\Controllers\SeatStatusController::class, 'index'])->name('events.seat-status');
 
 // about
 Route::get('/about', function () {
@@ -23,8 +24,8 @@ Route::get('/tracking/results', [\App\Http\Controllers\OrderTrackingController::
 Route::get('/tracking/{order_number}', [\App\Http\Controllers\OrderTrackingController::class, 'show'])->name('tracking.show');
 
 // Order creation and checkout
-Route::get('/events/{slug}/order', [OrderController::class, 'create'])->name('orders.create');
-Route::post('/events/{slug}/order', [OrderController::class, 'store'])->name('orders.store');
+Route::get('/events/{slug}/order', [OrderController::class, 'create'])->middleware('throttle:booking')->name('orders.create');
+Route::post('/events/{slug}/order', [OrderController::class, 'store'])->middleware('throttle:booking')->name('orders.store');
 Route::get('/orders/{orderToken}/checkout', [OrderController::class, 'checkout'])->name('orders.checkout');
 Route::post('/orders/{orderToken}/promo', [OrderController::class, 'applyPromo'])->name('orders.applyPromo');
 Route::post('/orders/{orderToken}/refresh-payment', [OrderController::class, 'refreshPayment'])->name('orders.refreshPayment');

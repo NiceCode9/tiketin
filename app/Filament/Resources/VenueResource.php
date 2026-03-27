@@ -48,7 +48,10 @@ class VenueResource extends Resource
                         
                         Forms\Components\TextInput::make('capacity')
                             ->numeric()
-                            ->maxValue(1000000),
+                            ->maxValue(1000000)
+                            ->disabled(fn (Forms\Get $get) => $get('has_seating'))
+                            ->dehydrated()
+                            ->helperText(fn (Forms\Get $get) => $get('has_seating') ? 'Capacity is automatically calculated from sections.' : null),
                         
                         Forms\Components\Toggle::make('has_seating')
                             ->label('Has Assigned Seating')
