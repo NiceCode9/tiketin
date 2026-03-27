@@ -47,7 +47,7 @@ Route::post('/scanner/login', [\App\Http\Controllers\ScannerAuthController::clas
 Route::post('/scanner/logout', [\App\Http\Controllers\ScannerAuthController::class, 'logout'])->name('scanner.logout');
 
 // Wristband Exchange (requires authentication + wristband_exchange_officer role)
-Route::middleware(['auth', 'scanner.role'])->prefix('scanner/exchange')->name('scanner.exchange')->group(function () {
+Route::middleware(['auth:scanner', 'scanner.role'])->prefix('scanner/exchange')->name('scanner.exchange')->group(function () {
     Route::get('/', [\App\Http\Controllers\ScannerController::class, 'exchangeIndex']);
     Route::post('/scan', [\App\Http\Controllers\ScannerController::class, 'scanTicket'])->name('.scan');
     Route::post('/issue', [\App\Http\Controllers\ScannerController::class, 'issueWristband'])->name('.issue');
@@ -55,7 +55,7 @@ Route::middleware(['auth', 'scanner.role'])->prefix('scanner/exchange')->name('s
 });
 
 // Wristband Validation (requires authentication + wristband_validator role)
-Route::middleware(['auth', 'scanner.role'])->prefix('scanner/validate')->name('scanner.validate')->group(function () {
+Route::middleware(['auth:scanner', 'scanner.role'])->prefix('scanner/validate')->name('scanner.validate')->group(function () {
     Route::get('/', [\App\Http\Controllers\ScannerController::class, 'validateIndex']);
     Route::post('/scan', [\App\Http\Controllers\ScannerController::class, 'scanWristband'])->name('.scan');
     Route::post('/confirm', [\App\Http\Controllers\ScannerController::class, 'confirmEntry'])->name('.confirm');

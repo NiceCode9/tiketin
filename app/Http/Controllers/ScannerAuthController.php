@@ -12,7 +12,7 @@ class ScannerAuthController extends Controller
      */
     public function showLogin()
     {
-        if (Auth::check()) {
+        if (Auth::guard('scanner')->check()) {
             return $this->redirectBasedOnRole();
         }
 
@@ -31,7 +31,7 @@ class ScannerAuthController extends Controller
 
         $remember = $request->boolean('remember');
 
-        if (Auth::attempt($credentials, $remember)) {
+        if (Auth::guard('scanner')->attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
             return $this->redirectBasedOnRole();
@@ -47,7 +47,7 @@ class ScannerAuthController extends Controller
      */
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('scanner')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -60,7 +60,7 @@ class ScannerAuthController extends Controller
      */
     protected function redirectBasedOnRole()
     {
-        $user = Auth::user();
+        $user = Auth::guard('scanner')->user();
 
         if ($user->hasRole('wristband_exchange_officer')) {
             return redirect()->route('scanner.exchange');
