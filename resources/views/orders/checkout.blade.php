@@ -62,7 +62,10 @@
                             <div class="flex items-start gap-4">
                                 @if ($order->event->banner_image)
                                     <img src="{{ Storage::url($order->event->banner_image) }}"
-                                        alt="{{ $order->event->name }}" class="w-32 h-32 object-cover rounded-lg">
+                                        alt="{{ $order->event->name }}"
+                                        width="128" height="128"
+                                        loading="lazy"
+                                        class="w-32 h-32 object-cover rounded-lg">
                                 @else
                                     <div
                                         class="w-32 h-32 bg-gradient-to-r from-brand-primary to-brand-secondary rounded-lg">

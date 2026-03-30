@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#1e293b"/>
+  <rect x="540" y="270" width="200" height="180" rx="16" fill="#334155"/>
+  <circle cx="600" cy="330" r="25" fill="#475569"/>
+  <polygon points="620,310 650,330 620,350" fill="#64748b"/>
+  <rect x="560" y="380" width="160" height="12" rx="6" fill="#475569"/>
+  <rect x="590" y="402" width="100" height="8" rx="4" fill="#334155"/>
+  <text x="640" y="500" font-family="system-ui, sans-serif" font-size="18" fill="#475569" text-anchor="middle">Tiketin Event</text>
+</svg>

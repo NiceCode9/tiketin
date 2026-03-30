@@ -18,7 +18,7 @@ class EnsureScannerRole
         $user = $request->user();
 
         if (!$user) {
-            return redirect()->route('login');
+            return redirect()->route('scanner.login');
         }
 
         // Only scanner roles can access scanner pages

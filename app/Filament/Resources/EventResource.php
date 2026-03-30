@@ -89,13 +89,27 @@ class EventResource extends Resource
                             ->image()
                             ->imageEditor()
                             ->directory('event-banners')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            // Auto-resize on upload to keep file sizes small
+                            ->imageResizeMode('cover')
+                            ->imageCropAspectRatio('16:9')
+                            ->imageResizeTargetWidth('1280')
+                            ->imageResizeTargetHeight('720')
+                            ->maxSize(5120) // 5MB max upload
+                            ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']),
                         
                         Forms\Components\FileUpload::make('additional_images')
                             ->image()
                             ->multiple()
                             ->directory('event-gallery')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            // Auto-resize gallery images
+                            ->imageResizeMode('cover')
+                            ->imageResizeTargetWidth('1200')
+                            ->imageResizeTargetHeight('800')
+                            ->maxSize(5120)
+                            ->acceptedFileTypes(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+                            ),
                         
                         Forms\Components\Select::make('venue_id')
                             ->label('Venue')

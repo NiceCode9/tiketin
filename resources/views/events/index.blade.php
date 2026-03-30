@@ -320,6 +320,8 @@
                                         @if ($event->banner_image)
                                             <img src="{{ Storage::url($event->banner_image) }}"
                                                 alt="{{ $event->name }}"
+                                                width="640" height="360"
+                                                loading="lazy"
                                                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
                                         @else
                                             <div

@@ -24,14 +24,23 @@ class ScannerController extends Controller
      */
     public function exchangeIndex()
     {
-        $user = Auth::user();
+        $user = Auth::guard('scanner')->user();
         $events = Event::where('client_id', '=', $user->client_id)
             ->where('status', '=', 'published')
             ->where('event_date', '>=', now()->subDays(1))
             ->orderBy('event_date', 'asc')
             ->get();
 
-        return view('scanner.exchange.index', compact('events'));
+        $selectedEventId = request('event_id');
+        $stats = null;
+        if ($selectedEventId) {
+            $event = Event::where('id', $selectedEventId)->where('client_id', $user->client_id)->first();
+            if ($event) {
+                $stats = $this->getEventStats($event);
+            }
+        }
+
+        return view('scanner.exchange.index', compact('events', 'stats'));
     }
 
     /**
@@ -146,7 +155,7 @@ class ScannerController extends Controller
      */
     public function exchangeHistory(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::guard('scanner')->user();
         
         $query = Wristband::whereHas('ticket.order.event', function($q) use ($user) {
             $q->where('client_id', '=', $user->client_id);
@@ -168,14 +177,23 @@ class ScannerController extends Controller
      */
     public function validateIndex()
     {
-        $user = Auth::user();
+        $user = Auth::guard('scanner')->user();
         $events = Event::where('client_id', '=', $user->client_id)
             ->where('status', '=', 'published')
             ->where('event_date', '>=', now()->subDays(1))
             ->orderBy('event_date', 'asc')
             ->get();
 
-        return view('scanner.validate.index', compact('events'));
+        $selectedEventId = request('event_id');
+        $stats = null;
+        if ($selectedEventId) {
+            $event = Event::where('id', $selectedEventId)->where('client_id', $user->client_id)->first();
+            if ($event) {
+                $stats = $this->getEventStats($event);
+            }
+        }
+
+        return view('scanner.validate.index', compact('events', 'stats'));
     }
 
     /**
@@ -191,7 +209,7 @@ class ScannerController extends Controller
         try {
             // Sanitize event access
             $event = Event::where('id', '=', $request->event_id)
-                ->where('client_id', '=', Auth::user()->client_id)
+                ->where('client_id', '=', Auth::guard('scanner')->user()->client_id)
                 ->firstOrFail();
 
             // Parse QR code
@@ -248,12 +266,12 @@ class ScannerController extends Controller
             
             // Sanitize event access
             $event = Event::where('id', '=', $request->event_id)
-                ->where('client_id', '=', Auth::user()->client_id)
+                ->where('client_id', '=', Auth::guard('scanner')->user()->client_id)
                 ->firstOrFail();
 
             // Validate entry
             // This service method already handles entry logging
-            $result = $this->wristbandService->validateWristbandEntry($wristband->uuid, Auth::user());
+            $result = $this->wristbandService->validateWristbandEntry($wristband->uuid, Auth::guard('scanner')->user());
 
             if ($result) {
                 return response()->json([
@@ -280,7 +298,7 @@ class ScannerController extends Controller
      */
     public function validateHistory(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::guard('scanner')->user();
         
         $query = Wristband::whereHas('ticket.order.event', function($q) use ($user) {
             $q->where('client_id', '=', $user->client_id);
@@ -297,5 +315,31 @@ class ScannerController extends Controller
         $wristbands = $query->latest('validated_at')->paginate(50);
 
         return view('scanner.validate.history', compact('wristbands'));
+    }
+
+    /**
+     * Get statistics for an event
+     */
+    protected function getEventStats(Event $event): array
+    {
+        $totalTickets = Ticket::whereHas('order', function($q) use ($event) {
+            $q->where('event_id', $event->id)->where('payment_status', 'success');
+        })->count();
+
+        $totalExchanged = Ticket::whereHas('order', function($q) use ($event) {
+            $q->where('event_id', $event->id);
+        })->where('status', 'exchanged')->count();
+
+        $totalValidated = Wristband::whereHas('ticket.order', function($q) use ($event) {
+            $q->where('event_id', $event->id);
+        })->whereNotNull('validated_at')->count();
+
+        return [
+            'total_tickets' => $totalTickets,
+            'total_exchanged' => $totalExchanged,
+            'total_validated' => $totalValidated,
+            'exchange_percentage' => $totalTickets > 0 ? round(($totalExchanged / $totalTickets) * 100) : 0,
+            'validation_percentage' => $totalExchanged > 0 ? round(($totalValidated / $totalExchanged) * 100) : 0,
+        ];
     }
 }

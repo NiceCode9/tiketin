@@ -3,60 +3,72 @@
 @section('title', 'Riwayat Validasi')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-900">Riwayat Validasi</h2>
+<div class="space-y-6">
+    <div class="flex flex-col space-y-1">
+        <h2 class="text-xl font-bold text-emerald-500">Log Validasi Masuk</h2>
+        <p class="text-xs text-gray-500">Daftar pengunjung yang telah divalidasi masuk ke area event.</p>
     </div>
 
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">ID Wristband</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Event</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Kategori</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Konsumen</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Petugas</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Tanggal</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($wristbands as $wristband)
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                #{{ $wristband->id }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $wristband->ticket->order->event->name }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $wristband->ticket->ticketCategory->name }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $wristband->ticket->consumer_name }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $wristband->validatedBy->name }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $wristband->validated_at->format('d M Y, H:i') }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                Tidak ada riwayat validasi ditemukan
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <!-- Filter -->
+    <div class="glass-dark rounded-2xl p-4">
+        <form action="{{ route('scanner.validate.history') }}" method="GET">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Filter Event</label>
+            <div class="flex gap-2">
+                <select name="event_id" class="flex-1 bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                    <option value="">Semua Event</option>
+                    @foreach(\App\Models\Event::where('client_id', auth()->guard('scanner')->user()->client_id)->get() as $event)
+                        <option value="{{ $event->id }}" {{ request('event_id') == $event->id ? 'selected' : '' }}>{{ $event->name }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold">Cari</button>
+            </div>
+        </form>
     </div>
 
-    <div class="mt-4">
-        {{ $wristbands->links() }}
+    <!-- History List -->
+    <div class="space-y-3">
+        @forelse($wristbands as $wristband)
+            <div class="glass-dark rounded-2xl p-4 border-l-4 border-emerald-500">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">CHECK-IN ID</span>
+                        <h3 class="text-lg font-black text-white italic">#{{ $wristband->id }}</h3>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">VALIDATED AT</span>
+                        <span class="text-xs font-black text-emerald-400">{{ $wristband->validated_at->format('H:i:s') }}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Customer:</span>
+                        <span class="text-white font-semibold">{{ $wristband->ticket->consumer_name }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Kategori:</span>
+                        <span class="text-emerald-400 font-bold uppercase text-xs">{{ $wristband->ticket->ticketCategory->name }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Validator:</span>
+                        <span class="text-gray-400 italic text-xs">{{ $wristband->validatedBy->name }}</span>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="text-center py-12 glass-dark rounded-3xl">
+                <div class="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <p class="text-gray-500 text-sm font-medium">Belum ada pengunjung masuk hari ini.</p>
+            </div>
+        @endforelse
+    </div>
+
+    <div class="mt-6">
+        {{ $wristbands->links('pagination::simple-tailwind') }}
     </div>
 </div>
 @endsection
