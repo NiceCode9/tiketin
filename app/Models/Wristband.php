@@ -35,16 +35,7 @@ class Wristband extends Model
      */
     protected static function booted(): void
     {
-        // Auto-generate UUID and checksum
-        static::creating(function ($wristband) {
-            if (empty($wristband->uuid)) {
-                $wristband->uuid = Str::uuid();
-            }
-            
-            if (empty($wristband->checksum)) {
-                $wristband->checksum = hash('sha256', $wristband->uuid . config('app.key'));
-            }
-        });
+        // Auto-generation disabled to support external wristband QR codes
     }
 
     /**

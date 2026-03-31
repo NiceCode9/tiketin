@@ -2,77 +2,107 @@
 
 namespace App\Policies;
 
-use App\Models\Wristband;
-use App\Models\Ticket;
 use App\Models\User;
+use App\Models\Wristband;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class WristbandPolicy
 {
+    use HandlesAuthorization;
+
     /**
-     * Determine if the user can exchange a ticket for wristband
+     * Determine whether the user can view any models.
      */
-    public function exchange(User $user, Ticket $ticket): bool
+    public function viewAny(User $user): bool
     {
-        if ($user->hasRole('super_admin')) {
-            return true;
-        }
-
-        if ($user->hasRole('wristband_exchange_officer')) {
-            // Officer can exchange for any event
-            // In production, you might want to restrict to assigned events
-            return true;
-        }
-
-        return false;
+        return $user->can('view_any_wristband');
     }
 
     /**
-     * Determine if the user can validate a wristband for entry
-     */
-    public function validate(User $user, Wristband $wristband): bool
-    {
-        if ($user->hasRole('super_admin')) {
-            return true;
-        }
-
-        if ($user->hasRole('wristband_validator')) {
-            // Validator can validate for any event
-            // In production, you might want to restrict to assigned events
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Determine if the user can reissue a wristband
-     */
-    public function reissue(User $user, Wristband $wristband): bool
-    {
-        if ($user->hasRole('super_admin')) {
-            return true;
-        }
-
-        if ($user->hasRole('wristband_exchange_officer')) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Determine if the user can view wristband details
+     * Determine whether the user can view the model.
      */
     public function view(User $user, Wristband $wristband): bool
     {
-        if ($user->hasRole('super_admin')) {
-            return true;
-        }
+        return $user->can('view_wristband');
+    }
 
-        if ($user->hasRole('client')) {
-            return $user->client_id === $wristband->ticket->order->event->client_id;
-        }
+    /**
+     * Determine whether the user can create models.
+     */
+    public function create(User $user): bool
+    {
+        return $user->can('create_wristband');
+    }
 
-        return false;
+    /**
+     * Determine whether the user can update the model.
+     */
+    public function update(User $user, Wristband $wristband): bool
+    {
+        return $user->can('update_wristband');
+    }
+
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, Wristband $wristband): bool
+    {
+        return $user->can('delete_wristband');
+    }
+
+    /**
+     * Determine whether the user can bulk delete.
+     */
+    public function deleteAny(User $user): bool
+    {
+        return $user->can('delete_any_wristband');
+    }
+
+    /**
+     * Determine whether the user can permanently delete.
+     */
+    public function forceDelete(User $user, Wristband $wristband): bool
+    {
+        return $user->can('force_delete_wristband');
+    }
+
+    /**
+     * Determine whether the user can permanently bulk delete.
+     */
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('force_delete_any_wristband');
+    }
+
+    /**
+     * Determine whether the user can restore.
+     */
+    public function restore(User $user, Wristband $wristband): bool
+    {
+        return $user->can('restore_wristband');
+    }
+
+    /**
+     * Determine whether the user can bulk restore.
+     */
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('restore_any_wristband');
+    }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(User $user, Wristband $wristband): bool
+    {
+        return $user->can('replicate_wristband');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_wristband');
     }
 }

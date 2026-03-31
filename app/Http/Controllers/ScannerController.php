@@ -122,6 +122,7 @@ class ScannerController extends Controller
         $request->validate([
             'ticket_id' => 'required|exists:tickets,id',
             'event_id' => 'required|exists:events,id',
+            'wristband_code' => 'required|string|min:3',
         ]);
 
         try {
@@ -129,17 +130,17 @@ class ScannerController extends Controller
             
             // Sanitize event access
             $event = Event::where('id', '=', $request->event_id)
-                ->where('client_id', '=', Auth::user()->client_id)
+                ->where('client_id', '=', Auth::guard('scanner')->user()->client_id)
                 ->firstOrFail();
 
-            // Exchange ticket for wristband
-            $wristband = $this->wristbandService->exchangeTicketForWristband($ticket, Auth::user());
+            // Exchange ticket for wristband with external code
+            $wristband = $this->wristbandService->exchangeTicketForWristband($ticket, Auth::guard('scanner')->user(), $request->wristband_code);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Wristband berhasil diterbitkan!',
+                'message' => 'Gelang berhasil diaktivasi!',
                 'wristband' => $wristband,
-                'qr_data' => $this->wristbandService->getQRCodeData($wristband)
+                'qr_data' => $request->wristband_code
             ]);
 
         } catch (\Exception $e) {
@@ -269,8 +270,7 @@ class ScannerController extends Controller
                 ->where('client_id', '=', Auth::guard('scanner')->user()->client_id)
                 ->firstOrFail();
 
-            // Validate entry
-            // This service method already handles entry logging
+            // Validate entry using raw code
             $result = $this->wristbandService->validateWristbandEntry($wristband->uuid, Auth::guard('scanner')->user());
 
             if ($result) {

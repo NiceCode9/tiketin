@@ -12,18 +12,29 @@ class WristbandService
     /**
      * Exchange ticket for wristband
      */
-    public function exchangeTicketForWristband(Ticket $ticket, User $officer): Wristband
+    public function exchangeTicketForWristband(Ticket $ticket, User $officer, string $wristbandCode): Wristband
     {
         $ticketService = app(TicketService::class);
 
         if (!$ticketService->canExchangeForWristband($ticket)) {
-            throw new \Exception('Ticket cannot be exchanged for wristband');
+            throw new \Exception('Tiket tidak dapat ditukarkan saat ini.');
         }
 
-        return DB::transaction(function () use ($ticket, $officer) {
+        // Validate wristband code uniqueness for the event
+        $eventId = $ticket->order->event_id;
+        $exists = Wristband::whereHas('ticket.order', function($q) use ($eventId) {
+            $q->where('event_id', $eventId);
+        })->where('uuid', $wristbandCode)->exists();
+
+        if ($exists) {
+            throw new \Exception('Gelang dengan kode ini sudah terdaftar untuk event ini. Gunakan gelang lain.');
+        }
+
+        return DB::transaction(function () use ($ticket, $officer, $wristbandCode) {
             // Create wristband
             $wristband = Wristband::create([
                 'ticket_id' => $ticket->id,
+                'uuid' => $wristbandCode, // Store the physical QR code
                 'status' => 'active',
                 'exchanged_at' => now(),
                 'exchanged_by' => $officer->id,
@@ -90,15 +101,16 @@ class WristbandService
     /**
      * Reissue wristband (for lost/damaged wristbands)
      */
-    public function reissueWristband(Wristband $oldWristband, User $officer): Wristband
+    public function reissueWristband(Wristband $oldWristband, User $officer, string $newWristbandCode): Wristband
     {
-        return DB::transaction(function () use ($oldWristband, $officer) {
+        return DB::transaction(function () use ($oldWristband, $officer, $newWristbandCode) {
             // Revoke old wristband
             $oldWristband->update(['status' => 'revoked']);
 
-            // Create new wristband
+            // Create new wristband with the new physical code
             $newWristband = Wristband::create([
                 'ticket_id' => $oldWristband->ticket_id,
+                'uuid' => $newWristbandCode,
                 'status' => 'active',
                 'exchanged_at' => now(),
                 'exchanged_by' => $officer->id,
@@ -109,35 +121,22 @@ class WristbandService
     }
 
     /**
-     * Validate wristband QR code
+     * Validate wristband QR code (Simple lookup for external codes)
      */
-    public function validateWristbandQR(string $uuid, string $checksum): Wristband
+    public function validateWristbandQR(string $qrCode): Wristband
     {
-        $wristband = Wristband::where('uuid', $uuid)->firstOrFail();
-
-        if (!$wristband->verifyChecksum($checksum)) {
-            throw new \Exception('Invalid QR code checksum');
-        }
-
-        return $wristband;
+        // For external codes, we just search by the raw string
+        return Wristband::where('uuid', $qrCode)->firstOrFail();
     }
 
     /**
-     * Parse and validate QR code string (format: uuid|checksum)
+     * Parse and validate QR code string (External QR version)
      */
     public function validateQR(string $qrCode): array
     {
         try {
-            $parts = explode('|', $qrCode);
-            if (count($parts) !== 2) {
-                return [
-                    'valid' => false,
-                    'message' => 'Invalid QR code format. Expected uuid|checksum.'
-                ];
-            }
-
-            [$uuid, $checksum] = $parts;
-            $wristband = $this->validateWristbandQR($uuid, $checksum);
+            // Simplify: The whole string is the code
+            $wristband = $this->validateWristbandQR($qrCode);
 
             return [
                 'valid' => true,
@@ -147,7 +146,7 @@ class WristbandService
         } catch (\Exception $e) {
             return [
                 'valid' => false,
-                'message' => $e->getMessage()
+                'message' => 'Gelang tidak terdaftar atau tidak valid: ' . $e->getMessage()
             ];
         }
     }

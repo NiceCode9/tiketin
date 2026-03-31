@@ -131,8 +131,11 @@
 
                 <div class="space-y-3">
                     <template x-if="resultSuccess && !wristband">
-                        <button @click="issueWristband()" class="w-full bg-green-500 hover:bg-green-400 text-black font-black py-4 rounded-2xl shadow-lg transition active:scale-95">
-                            TERBITKAN WRISTBAND
+                        <button @click="prepareWristbandScan()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 17h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                            </svg>
+                            SCAN GELANG FISIK
                         </button>
                     </template>
                     
@@ -165,6 +168,7 @@
             ticket: null,
             consumer: null,
             wristband: null,
+            awaitingWristband: false, // New state for 2nd scan
 
             onEventChange() {
                 if (this.selectedEventId) {
@@ -172,7 +176,8 @@
                 }
             },
 
-            async startScanner() {
+            async startScanner(mode = 'ticket') {
+                this.awaitingWristband = (mode === 'wristband');
                 this.scannerActive = true;
                 this.$nextTick(() => {
                     this.scanner = new Html5QrcodeScanner(
@@ -199,8 +204,13 @@
             processQR(qrCode) {
                 if (!qrCode || this.isProcessing) return;
                 
+                if (this.awaitingWristband) {
+                    this.confirmWristbandLink(qrCode);
+                    return;
+                }
+
                 this.isProcessing = true;
-                this.vibrate(50); // Small haptic feedback for scan detection
+                this.vibrate(50);
                 
                 fetch('{{ route("scanner.exchange.scan") }}', {
                     method: 'POST',
@@ -222,7 +232,7 @@
                         this.ticket = data.ticket;
                         this.consumer = data.consumer;
                         this.wristband = null;
-                        this.showScanResult(true, 'TIKET VALID!', 'Data ditemukan. Silakan terbitkan wristband.');
+                        this.showScanResult(true, 'TIKET VALID!', 'Data ditemukan. Silakan hubungkan gelang fisik.');
                         this.playSound('success');
                         this.vibrate([100, 50, 100]);
                     } else {
@@ -237,10 +247,17 @@
                 });
             },
 
-            issueWristband() {
+            prepareWristbandScan() {
+                this.showResult = false;
+                this.startScanner('wristband');
+            },
+
+            confirmWristbandLink(wristbandCode) {
                 if (!this.ticket || this.isProcessing) return;
                 
                 this.isProcessing = true;
+                this.vibrate(50);
+                this.stopScanner();
                 
                 fetch('{{ route("scanner.exchange.issue") }}', {
                     method: 'POST',
@@ -250,18 +267,20 @@
                     },
                     body: JSON.stringify({
                         ticket_id: this.ticket.id,
-                        event_id: this.selectedEventId
+                        event_id: this.selectedEventId,
+                        wristband_code: wristbandCode
                     })
                 })
                 .then(res => res.json())
                 .then(data => {
                     this.isProcessing = false;
+                    this.awaitingWristband = false;
                     if (data.success) {
                         this.wristband = data.wristband;
-                        this.showScanResult(true, 'BERHASIL!', 'Wristband telah diterbitkan.');
+                        this.showScanResult(true, 'BERHASIL!', 'Gelang telah diaktivasi dan dihubungkan ke tiket.');
                         this.playSound('success');
                     } else {
-                        this.showScanResult(false, 'GAGAL TERBIT', data.message);
+                        this.showScanResult(false, 'AKTIVASI GAGAL', data.message);
                         this.playSound('error');
                     }
                 })
@@ -280,14 +299,14 @@
             },
 
             resetResult() {
+                const wasSuccessfulAktivasi = this.resultSuccess && this.wristband;
                 this.showResult = false;
                 this.ticket = null;
                 this.consumer = null;
                 this.wristband = null;
-                // If it was a success, maybe refresh to update stats? 
-                // For better UX, we could just reload or fetch stats via API.
-                // Let's reload only if it was a successful issue to update stats.
-                if (this.resultSuccess && this.wristband) {
+                this.awaitingWristband = false;
+                
+                if (wasSuccessfulAktivasi) {
                     window.location.reload();
                 }
             },
