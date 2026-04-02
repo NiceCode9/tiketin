@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Setup Roles & Permissions
         $this->call([
-            // RolesAndPermissionsSeeder::class,
+            RolesAndPermissionsSeeder::class,
             EventCategorySeeder::class,
         ]);
 
