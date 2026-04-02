@@ -138,7 +138,8 @@
                                                     @if ($category->hasAvailableTickets())
                                                         <span class="badge-success text-xs">
                                                             <i class="fas fa-check-circle mr-1"></i>
-                                                            {{ $category->available_count }} available
+                                                            {{-- {{ $category->available_count }} available --}}
+                                                            available
                                                         </span>
                                                     @else
                                                         <span class="badge-danger text-xs">
